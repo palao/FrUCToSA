@@ -7,17 +7,39 @@ Introduction
 
 **FrUCToSA** stands for **Fr**\ ankfurt **U**\ niversity **C**\ luster **T**\ ool **o**\ f
 **S**\ oftware **A**\ nalysis.
-It is a simple tool to collect and analyze data from software running on a cluster and to
-analyze that data with performance "in mind". **FrUCToSA** is developed in Python.
 
-The package contains:
+It is a simple tool to
 
+1. collect, and
+2. analyze
+
+data from software running on a cluster (like Goethe-HLR_) ---and from the cluster itself---
+and to analyze that data with performance "in mind".
+
+
+**FrUCToSA** is made of two elements:
+
+* **LiMon**: a **Li**\ ght **Mon**\ itor that also collects data
+* **PerA**: a **Per**\ formance **A**\ nalyzer that analyzes the data and
+  classifies it
+
+The package provides several programs:
+
+* ``fructosad``: main program. It works in the background (as a service/daemon) orchestrating
+  all the system.
 * ``lagent``: customizable service/daemon that collects performance data from the a node on the
   cluster. It runs locally and collects data from sensors that can be activated and configured via
   a configuration file.
 * ``lmaster``: a service/daemon that controls the agents and collects data from them. It runs in a
   master node of the cluster; it is controled via a configuration file.
+* ``perad``: another service/daemon that analyzes the data and classifies it according to performance
 
+**FrUCToSA** is developed in Python at the CSC_ (Goethe Universitaet Frankfurt) under the
+GPL3 license.
+
+
+.. _Goethe-HLR: https://csc.uni-frankfurt.de/
+.. _CSC: Goethe-HLR_
 
   
 Installation
@@ -33,14 +55,17 @@ Just install the FrUCToSA package from PyPI:
 Usage
 =====
 
-1. Start ``lmaster``
+1. Configure
+2. Start ``fructosad``
    ::
 
-      # lmaster start
+      # fructosa start
 
-   By default the configuration file is ``/etc/fructosa/lmaster.conf``, but can be changed from the
-   command line. A typical configuration might be:
-   ::
+   By default the configuration files are
+   * ``/etc/fructosa/lmaster.conf``
+   * ... #aquin#
+
+   but that can be changed from the command line. A typical configuration might be:::
 
       [lmaster]
       host = localhost
@@ -57,6 +82,7 @@ Usage
       level = DEBUG
 
    No option is mandatory. In the file ``fructosa/constants.py`` the defaults are defined.
+   
 2. Start ``lagent``
    ::
 
