@@ -30,6 +30,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 def get_requirements():
+    """Find the required packages from a 'single source of truth' (tm)."""
     req_file_name = path.join(here, "requirements", 'production.text')
     with open(req_file_name, encoding='utf-8') as f:
         reqs = [_.strip() for _ in f]
