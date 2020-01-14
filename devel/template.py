@@ -1,6 +1,7 @@
 #!/bin/env python3
 
 #######################################################################
+#
 # Copyright (C) 2020 David Palao
 #
 # This file is part of FrUCToSA.
@@ -19,4 +20,5 @@
 #  along with FrUCToSA.  If not, see <http://www.gnu.org/licenses/>.
 #
 #######################################################################
+
 

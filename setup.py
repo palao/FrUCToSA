@@ -29,6 +29,13 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+def get_requirements():
+    req_file_name = path.join(here, "requirements", 'production.text')
+    with open(req_file_name, encoding='utf-8') as f:
+        reqs = [_.strip() for _ in f]
+    return reqs
+
+
 setup(name="FrUCToSA",
     use_scm_version={"version_scheme": "post-release"},
     setup_requires=['setuptools_scm'],
@@ -40,7 +47,7 @@ setup(name="FrUCToSA",
     license='GNU General Public License (GPLv3)',
     packages=find_packages(),
     provides=["fructosa"],
-    install_requires=["psutil"],
+    install_requires=get_requirements(),
     platforms=['GNU/Linux'],
     entry_points={'console_scripts': [
         "fructosad = fructosa.fructosad:main",
@@ -59,6 +66,7 @@ setup(name="FrUCToSA",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: System :: Monitoring",
     ],
