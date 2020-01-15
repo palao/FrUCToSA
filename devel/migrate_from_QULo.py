@@ -29,7 +29,7 @@ to a convenient form for the FrUCToSA project.
 import sys
 import argparse
 import os
-from glob import iglob
+from glob import iglob, glob
 import shutil
 
 PATTERNS = ("**/*.py", "**/*.conf")
@@ -45,12 +45,20 @@ def parse_conf():
     return args
 
 def collect_files(conf):
+    '''Normally only interested in regular files, but in principle the function is 
+    ready to collect dirs too.'''
     files = set()
+    directories = set()
     for rootd in conf.directories:
         for pat in PATTERNS:
             for e in iglob(os.path.join(rootd, pat), recursive=True):
-                files.add(e)
-    return files
+                if os.path.isfile(e):
+                    files.add(e)
+                elif os.path.isdir(e):
+                    directories.add(e)
+                else:
+                    print("*** Unknwon type of file:", e)
+    return files, directories
 
 def backup(filename):
     new_filename = filename+".back"
@@ -64,6 +72,7 @@ def read_file(target_file):
 def fix_copyright(lines):
     for l in lines:
         if l.startswith("# Copyright (C)"):
+            yield "#\n"
             yield "# Copyright (C) 2020 David Palao\n"
         else:
             yield l
@@ -84,21 +93,42 @@ def fix_qulo(lines):
     for l in lines:
         yield l.replace("qulo", "fructosa").replace("Qulo", "Fructosa").replace("QULO", "FRUCTOSA")
 
-        
+def change_strings(raw):
+    copyright_fixed = fix_copyright(raw)
+    name_fixed = fix_package_name(copyright_fixed)
+    qagent_replaced = fix_qagent(name_fixed)
+    qmaster_replaced = fix_qmaster(qagent_replaced)
+    qulo_replaced = fix_qulo(qmaster_replaced)
+    return qulo_replaced
+    
 def process_file(target_file, do_write):
     if do_write:
         backup(target_file)
     raw = read_file(target_file)
-    copyright_fixed = fix_copyright(raw)
-    name_fixed = fix_package_name(copyright_fixed)
-    qagent_replaced = fix_qagent(name_fixed)
-    # for l in raw:
-    #     print(l.strip())
-    
-    
+    #new_filename_gen = change_strings((os.path.basename(target_file),))
+    #new_filename = os.path.join(os.path.dirname(target_file), next(new_filename_gen))
+    lines = list(change_strings(raw))
+    if do_write:
+        #print(f"Replacing '{target_file}' -> '{new_filename}'")
+        print(" === ", target_file, end="\n\n")
+        with open(target_file, "w") as f:
+            for l in lines:
+                print(l.rstrip("\n"), file=f)
+        print("-"*80)
+        #os.unlink(target_file)
+    else:
+        #print()
+        print(target_file, end="\n\n")
+        for l in lines:
+            print(l.rstrip("\n"))
+        print("-"*80)
+
+def process_directory(target_dir, do_write):
+    pass
+            
 def main():
     conf = parse_conf()
-    target_files = collect_files(conf)
+    target_files, _ = collect_files(conf)
     for target_file in target_files:
         process_file(target_file, conf.write)
 
