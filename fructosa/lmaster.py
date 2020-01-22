@@ -29,7 +29,7 @@ import struct
 from fructosa.fructosad import FructosaD
 from fructosa.conf import LMasterConf
 from fructosa.maind import generic_main
-from fructosa.qmessage import QMessage, QMessageError
+from fructosa.lmessage import LMessage, LMessageError
 
 from fructosa.constants import (
     PROTO_STARTING_PROGRAM_MSG, PROTO_STOPPED_PROGRAM_MSG, PROTO_CANT_STOP_MSG,
@@ -121,8 +121,8 @@ class LMaster(FructosaD):
             raw_message = await self._to_graphite_queue.get()
             self.logger.debug(PROTO_MSG_TO_GRAPHITE.format(raw_message))
             try:
-                message = QMessage(raw_message).to_graphite()
-            except QMessageError as e:
+                message = LMessage(raw_message).to_graphite()
+            except LMessageError as e:
                 self.logger.error(e)
             else:
             #try:#This requires a FT -> killing Graphite while the system runs, and maybe restarting it

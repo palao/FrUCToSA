@@ -29,20 +29,20 @@ from fructosa.constants import (
 )
 
 
-class QMessageError(Exception):
+class LMessageError(Exception):
     pass
 
 
-class UnsuitableQMessage(QMessageError):
+class UnsuitableLMessage(LMessageError):
     pass
 
 
-class WrongPickleMessage(QMessageError):
+class WrongPickleMessage(LMessageError):
     pass
 
 
-class QMessage:
-    """The QMessage class packs functionality to interact with messages produced in
+class LMessage:
+    """The LMessage class packs functionality to interact with messages produced in
     the sensors.
     """
     def __init__(self, message):
@@ -76,7 +76,7 @@ class QMessage:
                 sensor=self._message["sensor"],
                 measurement=self._message["value"],
             )
-            raise UnsuitableQMessage(err_msg)
+            raise UnsuitableLMessage(err_msg)
         data = self._arrange_for_graphite()
         dressed_message = self._pack_for_graphite(data)
         return dressed_message

@@ -29,7 +29,7 @@ from inspect import signature, Parameter
 from tests.unit.fructosa.aio_tools import asyncio_run, AsyncioMock
 
 import fructosa.lmaster
-from fructosa.qmessage import UnsuitableQMessage, WrongPickleMessage
+from fructosa.lmessage import UnsuitableLMessage, WrongPickleMessage
 from fructosa.constants import (
     LAGENT_TO_LMASTER_DATA_PORT_KEY, LMASTER_HOST_KEY,
     GRAPHITE_HOST_KEY, GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
@@ -270,8 +270,8 @@ class LMasterTestCase(unittest.TestCase):
         from inspect import iscoroutinefunction
         self.assertTrue(iscoroutinefunction(self.test_class._send_to_graphite))
 
-    @patch("fructosa.lmaster.QMessage")
-    def test_send_to_graphite_awaits_in_queue_get(self, mock_QMessage):
+    @patch("fructosa.lmaster.LMessage")
+    def test_send_to_graphite_awaits_in_queue_get(self, mock_LMessage):
         with patch(
                 "fructosa.lmaster.asyncio.open_connection", new=AsyncioMock()
                 ) as open_connection:
@@ -292,9 +292,9 @@ class LMasterTestCase(unittest.TestCase):
                     expected_calls_get)
                 self.simple_instance._to_graphite_queue.get.mock.reset_mock()
 
-    @patch("fructosa.lmaster.QMessage")
+    @patch("fructosa.lmaster.LMessage")
     @patch("fructosa.lmaster.asyncio.open_connection", new=AsyncioMock())
-    def test_send_to_graphite_awaits_open_connection_only_once_if_connection(self, mock_QMessage):
+    def test_send_to_graphite_awaits_open_connection_only_once_if_connection(self, mock_LMessage):
         from fructosa.lmaster import asyncio
         mock_open_connection = asyncio.open_connection
         reader = MagicMock()
@@ -321,9 +321,9 @@ class LMasterTestCase(unittest.TestCase):
             )
             mock_open_connection.mock.reset_mock()
 
-    @patch("fructosa.lmaster.QMessage")
+    @patch("fructosa.lmaster.LMessage")
     @patch("fructosa.lmaster.asyncio.open_connection", new=AsyncioMock())
-    def test_send_to_graphite_sends_raw_message_to_logger(self, mock_QMessage):
+    def test_send_to_graphite_sends_raw_message_to_logger(self, mock_LMessage):
         from fructosa.lmaster import asyncio
         mock_open_connection = asyncio.open_connection
         reader = MagicMock()
@@ -340,7 +340,7 @@ class LMasterTestCase(unittest.TestCase):
             values = [MagicMock() for _ in range(num)] + [InventedException()]
             self.simple_instance._to_graphite_queue.get = AsyncioMock(
                 side_effect=values)
-            #args = aquin+[QMessage.from_remote(_) for _ in values[:-1]]
+            #args = aquin+[LMessage.from_remote(_) for _ in values[:-1]]
             args = values[:-1]
             expected = [log_template.format(_) for _ in args]
             self.simple_instance._to_graphite_queue.get.mock.side_effect = values
@@ -350,9 +350,9 @@ class LMasterTestCase(unittest.TestCase):
             for expected_line in expected:
                 self.assertIn(expected_line, log.output)
 
-    @patch("fructosa.lmaster.QMessage")
+    @patch("fructosa.lmaster.LMessage")
     @patch("fructosa.lmaster.asyncio.open_connection", new=AsyncioMock())
-    def test_send_to_graphite_writes_message_to_writer(self, mock_QMessage):
+    def test_send_to_graphite_writes_message_to_writer(self, mock_LMessage):
         from fructosa.lmaster import asyncio
         mock_open_connection = asyncio.open_connection
         reader = MagicMock()
@@ -365,18 +365,18 @@ class LMasterTestCase(unittest.TestCase):
             values = [MagicMock() for _ in range(num)] + [InventedException()]
             self.simple_instance._to_graphite_queue.get = AsyncioMock(
                 side_effect=values)
-            #args = aquin+[QMessage.from_remote(_) for _ in values[:-1]]
+            #args = aquin+[LMessage.from_remote(_) for _ in values[:-1]]
             args = values[:-1]
-            expected_calls = [call(mock_QMessage(_).to_graphite()) for _ in args]
+            expected_calls = [call(mock_LMessage(_).to_graphite()) for _ in args]
             self.simple_instance._to_graphite_queue.get.mock.side_effect = values
             with self.assertRaises(InventedException):
                 asyncio_run(self.simple_instance._send_to_graphite())
             writer.write.assert_has_calls(expected_calls)
             writer.write.reset_mock()
 
-    @patch("fructosa.lmaster.QMessage")
+    @patch("fructosa.lmaster.LMessage")
     @patch("fructosa.lmaster.asyncio.open_connection", new=AsyncioMock())
-    def test_send_to_graphite_behaviour_if_invalid_message(self, mock_QMessage):
+    def test_send_to_graphite_behaviour_if_invalid_message(self, mock_LMessage):
         from fructosa.lmaster import asyncio
         mock_open_connection = asyncio.open_connection
         reader = MagicMock()
@@ -389,21 +389,21 @@ class LMasterTestCase(unittest.TestCase):
         values = [MagicMock() for _ in range(num)] + [InventedException()]
         self.simple_instance._to_graphite_queue.get = AsyncioMock(
             side_effect=values)
-        #args = aquin+[QMessage.from_remote(_) for _ in values[:-1]]
+        #args = aquin+[LMessage.from_remote(_) for _ in values[:-1]]
         err_msg_unsuit = "paripe paripa"
         err_msg_pickle = "pickle is mean"
         args = values[:-1]
         data_to_write = [MagicMock() for _ in range(num-2)]
         idata_to_write = iter(data_to_write)
-        def qmessage_init(raw_value):
+        def lmessage_init(raw_value):
             if raw_value == args[1]:
                 return unsuitable_msg
             elif raw_value == args[2]:
                 raise WrongPickleMessage(err_msg_pickle)
             else:
                 return next(idata_to_write)
-        mock_QMessage.side_effect = qmessage_init
-        unsuitable_msg.to_graphite.side_effect = UnsuitableQMessage(err_msg_unsuit)
+        mock_LMessage.side_effect = lmessage_init
+        unsuitable_msg.to_graphite.side_effect = UnsuitableLMessage(err_msg_unsuit)
         self.simple_instance._to_graphite_queue.get.mock.side_effect = values
         logger = self.simple_instance.logger
         log_level = "ERROR"

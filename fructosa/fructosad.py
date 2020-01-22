@@ -76,7 +76,7 @@ class FructosaD:
                 self.logger.warning(warn_msg)
             raise SystemExit(START_STOP_ERROR)
         except PermissionError as e:
-            self.logger.warn("Exception message: "+str(e))
+            self.logger.warning("Exception message: "+str(e))
             self.logger.error(e.to_error)
             raise SystemExit(START_STOP_ERROR)
         self.logger.warning(self._starting_message)
