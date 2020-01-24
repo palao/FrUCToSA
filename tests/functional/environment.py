@@ -39,15 +39,22 @@ DEFAULT_FRUCTOSA_FT_ENVIRONMENT = DOCKER_FT_ENVIRONMENT
 
 FRUCTOSA_FT_ENVIRONMENT_VAR = "FRUCTOSA_FT_ENVIRONMENT"
 
+try:
+    FRUCTOSA_PROJECT_LOCAL_PATH = os.environ["FRUCTOSA_PROJECT_PATH"]
+except KeyError:
+    FRUCTOSA_PROJECT_LOCAL_PATH = os.path.normpath(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+    )
+
 DOCKER_COMPOSE_COMMON = """version: '3.5'
 
 x-fructosa-src:
   &fructosa-src
   type: bind
-  source: /home/palao/HPCkz/FrUCToSA
+  source: {local_project_path}
   target: /FrUCToSA
     
-services:"""
+services:""".format(local_project_path=FRUCTOSA_PROJECT_LOCAL_PATH)
 
 PROTO_DOCKER_COMPOSE_SERVICE = """
   {service_name}:
