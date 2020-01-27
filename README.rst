@@ -45,8 +45,7 @@ GPL3 license.
 Installation
 ============
    
-Just install the FrUCToSA package from PyPI:
-::
+Just install the FrUCToSA package from PyPI:::
 
   $ pip install FrUCToSA
 
@@ -63,7 +62,7 @@ Usage
 
    By default the configuration files are
    * ``/etc/fructosa/lmaster.conf``
-   * ... #aquin#
+   * ``/etc/fructosa/lagent.conf``
 
    but that can be changed from the command line. A typical configuration might be:::
 
@@ -83,8 +82,7 @@ Usage
 
    No option is mandatory. In the file ``fructosa/constants.py`` the defaults are defined.
    
-2. Start ``lagent``
-   ::
+2. Start ``lagent``::
 
       # lagent start
 
