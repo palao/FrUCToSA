@@ -2,6 +2,21 @@
 The FrUCToSA package
 ********************
 
+Warning!
+========
+
+.. figure:: devel/in-progress-icon-2.jpg
+    :width: 200px
+    :align: center
+    :height: 200px
+    :alt: work in progress
+    :figclass: align-center
+
+    **This is work in progress!**
+
+    Some features marked with **Warning: TBD!** are not yet developed.
+
+
 Introduction
 ============
 
@@ -19,20 +34,23 @@ and to analyze that data with performance "in mind".
 
 **FrUCToSA** is made of two elements:
 
-* **LiMon**: a **Li**\ ght **Mon**\ itor that also collects data
+* **LiMon**: a **Li**\ ght **Mon**\ itor that collects data.
 * **PerA**: a **Per**\ formance **A**\ nalyzer that analyzes the data and
-  classifies it
+  classifies it.  **Warning: TBD!**
 
 The package provides several programs:
 
 * ``fructosad``: main program. It works in the background (as a service/daemon) orchestrating
-  all the system.
-* ``lagent``: customizable service/daemon that collects performance data from the a node on the
-  cluster. It runs locally and collects data from sensors that can be activated and configured via
-  a configuration file.
-* ``lmaster``: a service/daemon that controls the agents and collects data from them. It runs in a
-  master node of the cluster; it is controled via a configuration file.
-* ``perad``: another service/daemon that analyzes the data and classifies it according to performance
+  all the system. **Warning: TBD!**
+* ``lagent``: ``LiMon`` agent. Customizable service/daemon that collects performance data
+  from the a node on the cluster. It runs locally and collects data from sensors that can be
+  activated and configured via a configuration file.
+* ``lmaster``: ``LiMon`` master. Another service/daemon that controls the agents and collects
+  data from them. It runs in a master node of the cluster; it is controled via a configuration
+  file.
+* ``perad``: another service/daemon that analyzes the data and classifies it according to
+  the performance  **Warning: TBD!**
+
 
 **FrUCToSA** is developed in Python at the CSC_ (Goethe Universitaet Frankfurt) under the
 GPL3 license.
@@ -45,7 +63,7 @@ GPL3 license.
 Installation
 ============
    
-Just install the FrUCToSA package from PyPI:::
+Just install the FrUCToSA package from PyPI: ::
 
   $ pip install FrUCToSA
 
@@ -54,17 +72,19 @@ Just install the FrUCToSA package from PyPI:::
 Usage
 =====
 
-1. Configure
-2. Start ``fructosad``
-   ::
+1. Configure ``lmaster`` and ``lagent``
+2. [optional] Start Graphite (the data will be sent to it)
+3. [optional] Start Grafana and connect it to Graphite: this is an easy way to have
+   nice plots and dashboards.
+4. Start ``lmaster`` (see the output of ``lmaster -h``, to learn about some parameters
+   to control ``lmaster``)::
 
-      # fructosa start
+      # lmaster start
 
-   By default the configuration files are
-   * ``/etc/fructosa/lmaster.conf``
-   * ``/etc/fructosa/lagent.conf``
+   A configuration file is needed. By default the configuration file is
+   ``/etc/fructosa/lmaster.conf`` but that can be changed from the command line.
 
-   but that can be changed from the command line. A typical configuration might be:::
+   A typical configuration might be: ::
 
       [lmaster]
       host = localhost
@@ -75,28 +95,30 @@ Usage
       carbon receiver pickle port = 2004
       
       [logging]
-      filename = /tmp/lmaster.log
+      filename = /tmp/limon.log
       maxBytes = 1073741824
       backupCount = 10
       level = DEBUG
 
    No option is mandatory. In the file ``fructosa/constants.py`` the defaults are defined.
    
-2. Start ``lagent``::
+5. Start ``lagent`` on one or several computers (again, see the output of ``lagent -h``,
+   for more details): ::
 
       # lagent start
 
-   By default the configuration file is ``/etc/fructosa/lagent.conf``, but can be changed from the
-   command line. In this configuration file is where a *sensor* is activated. A typical
-   configuration with all sensors active is:
-   ::
+   A configuration file is needed. By default the configuration file is
+   ``/etc/fructosa/lagent.conf``, but can be changed from the command line.
+   In this configuration file is where the needed *sensor*\ s are activated.
+   A typical configuration with the master and the agent running locally
+   looks like this: ::
       
       [lmaster]
       host = localhost
       incoming data port = 7888
       
       [logging]
-      filename = /tmp/lagent.log
+      filename = /tmp/limon.log
       maxBytes = 1073741824
       backupCount = 10
       level = DEBUG
@@ -162,17 +184,25 @@ Usage
       [sensor:Users]
       time_interval = 10
 
-   Again, no option is mandatory. But if ``lagent`` must measure anything, some sensor must
-   be explicitly given. In the file ``fructosa/constants.py`` the defaults are defined.
+   This is just an example with many sensors active. No option is mandatory. But if ``lagent``
+   must measure anything, some sensor must be explicitly given. In the file
+   ``fructosa/constants.py`` the defaults are defined.
    The *time* given in the ``time_interval`` option is understood to be in *seconds*.
-      
-3. Start Graphite and inspect the dashboard to see the data.
+   If the agent runs on a different computer as the master, the ``host`` entry in the
+   ``lmaster`` section must be adjusted accordingly.
 
+
+Security
+========
+
+All the communications between ``lmaster`` and ``lagent`` are *bona fide*. There are
+no authentication or encryption mechanisms for now.
    
 
 TODO
 ====
 
+* Change ``constants.py``: ``lagent``, ``lmaster`` -> ``limon``
 * ``lagent`` should have an option to display the available sensors and some help for each sensor.
 * Sensors should accept options: the mechanism is almost there, but need to be completed.
 * Add sensors to read data from GPUs.
