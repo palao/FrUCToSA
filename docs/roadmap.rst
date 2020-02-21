@@ -93,7 +93,7 @@ FrUCToSA's Roadmap
 0.12.0
 ******
 
-* [R] ML analysis of collected data to classify jobs (PerA)
+* [R10] ML analysis of collected data to classify jobs (PerA)
 
 
 *****
