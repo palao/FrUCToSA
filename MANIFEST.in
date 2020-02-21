@@ -1,5 +1,5 @@
 # MANIFEST.in
-include *.text
+
 recursive-include doc *
 recursive-exclude doc *~
 recursive-exclude FrUCToSA.egg-info *
@@ -8,7 +8,4 @@ exclude .hgignore
 exclude .hgtags
 recursive-exclude examples *
 recursive-include examples/etc *
-
-include README.rst
-include CHANGES.rst
 
