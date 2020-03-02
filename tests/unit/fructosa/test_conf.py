@@ -164,7 +164,8 @@ class FructosaDConfTestCase(unittest.TestCase):
         instance._get_conf_from_command_line()
         pCLConf.assert_called_once_with(
             arguments=instance.arguments,
-            description=instance.description
+            description=instance.description,
+            defaults=instance.default_values,
         )
         self.assertEqual(instance._command_line_conf, pCLConf.return_value)
     

@@ -47,12 +47,7 @@ from .constants import (
     CONFIGFILE_STR, CONFIGFILE_OPTION_ALIASES, CONFIGFILE_HELP,
 )
 
-ACTION_ARGUMENT = (
-    ACTION_STR,
-    ((ACTION_STR,), dict(help=ACTION_HELP, choices=ACTION_CHOICES)),
-)
 
-# next two should go to fructosad and lagent (or constants?):
 FRUCTOSAD_DEFAULT_PIDFILE = os.path.join(
     DEFAULT_PID_DIR, DEFAULT_PROTO_PIDFILE.format(program=FRUCTOSAD_PROGRAM)
 )
@@ -63,11 +58,14 @@ LMASTER_DEFAULT_PIDFILE = os.path.join(
     DEFAULT_PID_DIR, DEFAULT_PROTO_PIDFILE.format(program=LMASTER_PROGRAM)
 )
 
+ACTION_ARGUMENT = (
+    ACTION_STR,
+    ((ACTION_STR,), dict(help=ACTION_HELP, choices=ACTION_CHOICES)),
+)
 PIDFILE_ARGUMENT = (
     PIDFILE_STR,
     (PIDFILE_OPTION_ALIASES, dict(help=PIDFILE_HELP, dest=PIDFILE_STR))
 )
-
 CONFIGFILE_ARGUMENT = (
     CONFIGFILE_STR,
     (CONFIGFILE_OPTION_ALIASES, dict(help=CONFIGFILE_HELP, dest=CONFIGFILE_STR))
@@ -83,19 +81,18 @@ class FructosaDConf:
     arguments = (ACTION_ARGUMENT, PIDFILE_ARGUMENT, CONFIGFILE_ARGUMENT)
     
     def __init__(self, argv=None):
-        self._get_conf_from_command_line() #  CL
+        self._get_conf_from_command_line()
         self._set_config_file()
         self._get_conf_from_config_file()
         self._prepare_logging()
         self._post_process_configuration()
 
-    def _get_conf_from_command_line(self): #  CL
+    def _get_conf_from_command_line(self):
         self._command_line_conf = CLConf(
-            description=self.description, arguments=self.arguments
+            description=self.description,
+            arguments=self.arguments,
+            defaults=self.default_values,
         )
-        #self._create_cl_parser() #  CL
-        #self._add_arguments() #  CL
-        #self._parse_arguments() #  CL
 
     def _set_config_file(self):
         self._config_file = self[CONFIGFILE_STR]#self.default_values[CONFIGFILE_STR]
@@ -162,13 +159,6 @@ class FructosaDConf:
                     value = OWN_LOG_BACKUPCOUNT_TYPE(value)
                 self.logging[key] = value
 
-    def _add_arguments(self): #  CL
-        for name, arg in self.arguments: #  CL
-            args, kwargs = arg #  CL
-            if name in self.default_values: #  CL
-                kwargs["default"] = self.default_values[name] #  CL
-            self._cl_parser.add_argument(*args, **kwargs) #  CL
-        
     def __getitem__(self, key): #  CL
         return self._command_line_conf[key] #  CL
 

@@ -21,14 +21,14 @@
 #
 #######################################################################
 
-
 import argparse
 
 
 class CLConf:
-    def __init__(self, description="", arguments=()):
+    def __init__(self, description, arguments, defaults):
         self.description = description
         self.arguments = arguments
+        self.defaults = defaults
         self._create_cl_parser()
         self._add_arguments()
         self._parse_arguments()
@@ -38,8 +38,12 @@ class CLConf:
         self._cl_parser = parser
 
     def _add_arguments(self):
-        pass
-    
+        for name, arg in self.arguments:
+            args, kwargs = arg
+            if name in self.defaults:
+                kwargs["default"] = self.defaults[name]
+            self._cl_parser.add_argument(*args, **kwargs)
+
     def _parse_arguments(self):
         args = self._cl_parser.parse_args()
         self._command_line_conf = vars(args)
