@@ -22,4 +22,17 @@
 #######################################################################
 
 
-CLConf = None
+import argparse
+
+
+class CLConf:
+    def __init__(self, description="", arguments=()):
+        self.description = description
+        self.arguments = arguments
+        self._create_cl_parser()
+        self._add_arguments()
+        self._parse_arguments()
+
+    _create_cl_parser = None
+    _add_arguments = None
+    _parse_arguments = None

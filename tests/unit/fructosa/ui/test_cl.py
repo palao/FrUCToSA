@@ -24,54 +24,63 @@
 import unittest
 from unittest.mock import patch
 
+from fructosa.ui.cl import CLConf
 
-class CLConfTestCase(unittest.TestCase):
-    @patch("fructosa.conf.FructosaDConf._parse_arguments")
-    @patch("fructosa.conf.FructosaDConf._add_arguments")
-    @patch("fructosa.conf.FructosaDConf._create_cl_parser")
-    def test_get_conf_from_command_line_calls_create_cl_parser_first_off(
+
+@patch("fructosa.ui.cl.CLConf._parse_arguments")
+@patch("fructosa.ui.cl.CLConf._add_arguments")
+@patch("fructosa.ui.cl.CLConf._create_cl_parser")
+class CLConfInitTestCase(unittest.TestCase):
+    def setUp(self):
+        self.desc = "my Funny description"
+        self.arguments = ("some", "arguments")
+        
+    def test_init_sets_some_attributes(self,
+          pcreate_cl_parser, padd_arguments, pparse_arguments):
+        instance = CLConf(description=self.desc, arguments=self.arguments)
+        self.assertEqual(instance.description, self.desc)
+        self.assertEqual(instance.arguments, self.arguments)
+        
+    def test_instance_creates_cl_parser_first_off(
             self, pcreate_cl_parser, padd_arguments, pparse_arguments):
         pcreate_cl_parser.side_effect = Exception
         with self.assertRaises(Exception):
-            self.empty_init_instance._get_conf_from_command_line()
+            instance = CLConf(description=self.desc, arguments=self.arguments)
         pcreate_cl_parser.assert_called_once_with()
         padd_arguments.assert_not_called()
         pparse_arguments.assert_not_called()
 
-    @patch("fructosa.conf.FructosaDConf._parse_arguments")
-    @patch("fructosa.conf.FructosaDConf._add_arguments")
-    @patch("fructosa.conf.FructosaDConf._create_cl_parser")
     def test_get_conf_from_command_line_calls_add_arguments_in_second_place(
             self, pcreate_cl_parser, padd_arguments, pparse_arguments):
         padd_arguments.side_effect = Exception
         with self.assertRaises(Exception):
-            self.empty_init_instance._get_conf_from_command_line()
+            instance = CLConf(description=self.desc, arguments=self.arguments)
         pcreate_cl_parser.assert_called_once_with()
         padd_arguments.assert_called_once_with()
         pparse_arguments.assert_not_called()
 
-    @patch("fructosa.conf.FructosaDConf._parse_arguments")
-    @patch("fructosa.conf.FructosaDConf._add_arguments")
-    @patch("fructosa.conf.FructosaDConf._create_cl_parser")
     def test_get_conf_from_command_line_calls_parse_arguments_last(
             self, pcreate_cl_parser, padd_arguments, pparse_arguments):
-        self.empty_init_instance._get_conf_from_command_line()
+        instance = CLConf(description=self.desc, arguments=self.arguments)
         pcreate_cl_parser.assert_called_once_with()
         padd_arguments.assert_called_once_with()
         pparse_arguments.assert_called_once_with()
 
-    @patch("fructosa.conf.argparse.ArgumentParser")
+
+@patch("fructosa.ui.cl.argparse.ArgumentParser")
+class CLConfCreateCLParserTestCase(unittest.TestCase):
     def test_create_cl_parser_creates_ArgumentParser_instance(self, pArgumentParser):
         self.empty_init_instance._create_cl_parser()
         pArgumentParser.assert_called_once_with(description=self.empty_init_instance.description)
         
-    @patch("fructosa.conf.argparse.ArgumentParser")
     def test_create_cl_parser_sets_cl_parser(self, pArgumentParser):
         parser = MagicMock()
         pArgumentParser.return_value = parser
         self.empty_init_instance._create_cl_parser()
         self.assertEqual(self.empty_init_instance._cl_parser, parser)
 
+
+class CLConfParseArgumentsTestCase(unittest.TestCase):
     def test_add_arguments_add_expected_arguments_to_cl_parser(self):
         from fructosa.conf import (
             ACTION_ARGUMENT, PIDFILE_ARGUMENT, FRUCTOSAD_DEFAULT_PIDFILE,
