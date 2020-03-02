@@ -45,9 +45,8 @@ class FructosaDConfTestCase(unittest.TestCase):
     @patch("fructosa.conf.FructosaDConf._set_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
     def setUp(
-            self, pset_argv, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
+            self, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
             pprepare_logging, ppost_process_configuration):
         logger = MagicMock()
         self.logger = logger
@@ -68,9 +67,8 @@ class FructosaDConfTestCase(unittest.TestCase):
     @patch("fructosa.conf.FructosaDConf._set_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
     def test_setup_logging_called_before_post_process_configuration(
-            self, pset_argv, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
+            self, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
             pprepare_logging, ppost_process_configuration):
         pprepare_logging.side_effect = Exception
         with self.assertRaises(Exception):
@@ -102,82 +100,44 @@ class FructosaDConfTestCase(unittest.TestCase):
         expected = Parameter.POSITIONAL_OR_KEYWORD
         self.assertEqual(expected, param_args)
 
-    @patch("fructosa.conf.FructosaDConf._post_process_configuration")
-    @patch("fructosa.conf.FructosaDConf._prepare_logging")
     @patch("fructosa.conf.FructosaDConf._set_config_file")
-    @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
-    def test_init_calls_set_argv(
-            self, pset_argv, pget_conf_from_cmdl, pget_conf_from_configfile,
-            pset_config_file, pprepare_logging, ppost_process_configuration):
-        args = MagicMock()
-        self.test_class(args)
-        pset_argv.assert_called_once_with(args)
-
-    @patch("fructosa.conf.FructosaDConf._post_process_configuration")
-    @patch("fructosa.conf.FructosaDConf._prepare_logging")
-    @patch("fructosa.conf.FructosaDConf._set_config_file")
-    @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
-    @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
-    def test_init_without_arguments_calls_set_argv_properly(
-            self, pset_argv, pget_conf_from_cmdl, pget_conf_from_configfile, 
-            pset_config_file, pprepare_logging, ppost_process_configuration):
-        self.test_class()
-        pset_argv.assert_called_once_with(None)
-
-    @patch("fructosa.conf.FructosaDConf._post_process_configuration")
-    @patch("fructosa.conf.FructosaDConf._prepare_logging")
-    @patch("fructosa.conf.FructosaDConf._set_config_file")
-    @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
-    @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
-    def test_init_calls_get_conf_from_command_line_after_set_argv(
-            self, pset_argv, pget_conf_from_cmdl, pget_conf_from_configfile,
-            pset_config_file, pprepare_logging, ppost_process_configuration):
-        pget_conf_from_cmdl.side_effect = Exception
+    def test_init_sets_command_line_conf(
+            self, pget_conf_from_cmdl, pset_config_file):
+        pset_config_file.side_effect = Exception
         with self.assertRaises(Exception):
             self.test_class("jama")
         pget_conf_from_cmdl.assert_called_once_with()
-        pset_argv.assert_called_once_with("jama")
 
     @patch("fructosa.conf.FructosaDConf._post_process_configuration")
     @patch("fructosa.conf.FructosaDConf._prepare_logging")
     @patch("fructosa.conf.FructosaDConf._set_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
     def test_init_set_config_file(
-            self, pset_argv, pget_conf_from_cmdl, pget_conf_from_configfile, pset_config_file,
+            self, pget_conf_from_cmdl, pget_conf_from_configfile, pset_config_file,
             pprepare_logging, ppost_process_configuration):
         self.test_class()
         pset_config_file.assert_called_once_with()
 
-    @patch("fructosa.conf.FructosaDConf._post_process_configuration")
-    @patch("fructosa.conf.FructosaDConf._prepare_logging")
     @patch("fructosa.conf.FructosaDConf._set_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
     def test_init_calls_get_conf_from_config_file_after_set_config_file(
-            self, pset_argv, pget_conf_from_cmdl, pget_conf_from_configfile, pset_config_file,
-            pprepare_logging, ppost_process_configuration):
+            self, pget_conf_from_cmdl, pget_conf_from_configfile, pset_config_file):
         pget_conf_from_configfile.side_effect = Exception
         with self.assertRaises(Exception):
             self.test_class()
         pget_conf_from_configfile.assert_called_once_with()
         pset_config_file.assert_called_once_with()
 
-    @patch("fructosa.conf.FructosaDConf._post_process_configuration")
     @patch("fructosa.conf.FructosaDConf._prepare_logging")
     @patch("fructosa.conf.FructosaDConf._set_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
     def test_init_calls_prepare_logging_after_get_conf_from_configfile(
-            self, pset_argv, pget_conf_from_cmdl, pget_conf_from_configfile, pset_config_file,
-            pprepare_logging, ppost_process_configuration):
+            self, pget_conf_from_cmdl, pget_conf_from_configfile,
+            pset_config_file, pprepare_logging):
         pprepare_logging.side_effect = Exception
         with self.assertRaises(Exception):
             self.test_class()
@@ -189,10 +149,9 @@ class FructosaDConfTestCase(unittest.TestCase):
     @patch("fructosa.conf.FructosaDConf._set_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_config_file")
     @patch("fructosa.conf.FructosaDConf._get_conf_from_command_line")
-    @patch("fructosa.conf.FructosaDConf._set_argv")
     def test_init_calls_post_process_configuration_after_prepare_logging(
-            self, pset_argv, pget_conf_from_cmdl, pget_conf_from_configfile, pset_config_file,
-            pprepare_logging, ppost_process_configuration):
+            self, pget_conf_from_cmdl, pget_conf_from_configfile,
+            pset_config_file, pprepare_logging, ppost_process_configuration):
         ppost_process_configuration.side_effect = Exception
         with self.assertRaises(Exception):
             self.test_class()
@@ -218,7 +177,8 @@ class FructosaDConfTestCase(unittest.TestCase):
 
     @patch("fructosa.conf.FructosaDConf._logging_from_config_file")
     @patch("fructosa.conf.setup_logging")
-    def test_prepare_logging_sets_logger_attribute(self, psetup_logging, plogging_from_config_file):
+    def test_prepare_logging_sets_logger_attribute(
+            self, psetup_logging, plogging_from_config_file):
         logger = MagicMock()
         psetup_logging.return_value = logger
         self.empty_init_instance.logging = MagicMock()
@@ -259,17 +219,6 @@ class FructosaDConfTestCase(unittest.TestCase):
         instance._parse_config_file()
         conf.read.assert_called_once_with(configfile)
 
-    def test_set_argv(self):
-        args = MagicMock()
-        self.empty_init_instance._set_argv(args)
-        self.assertEqual(self.empty_init_instance._argv, args)
-
-    @patch("fructosa.conf.sys.argv")
-    def test_set_argv_with_None(self, sys_argv):
-        args = None
-        self.empty_init_instance._set_argv(args)
-        self.assertEqual(self.empty_init_instance._argv, sys_argv[1:])
-
     @patch("fructosa.conf.FructosaDConf.__getitem__")
     def test_set_config_file_sets_config_file_attribute(self, pgetitem):
         from fructosa.constants import CONFIGFILE_STR
@@ -281,81 +230,6 @@ class FructosaDConfTestCase(unittest.TestCase):
         pgetitem.side_effect = getitem
         instance._set_config_file()
         self.assertEqual(instance._config_file, mock_conf)
-
-    @patch("fructosa.conf.FructosaDConf._parse_arguments")
-    @patch("fructosa.conf.FructosaDConf._add_arguments")
-    @patch("fructosa.conf.FructosaDConf._create_cl_parser")
-    def test_get_conf_from_command_line_calls_create_cl_parser_first_off(
-            self, pcreate_cl_parser, padd_arguments, pparse_arguments):
-        pcreate_cl_parser.side_effect = Exception
-        with self.assertRaises(Exception):
-            self.empty_init_instance._get_conf_from_command_line()
-        pcreate_cl_parser.assert_called_once_with()
-        padd_arguments.assert_not_called()
-        pparse_arguments.assert_not_called()
-
-    @patch("fructosa.conf.FructosaDConf._parse_arguments")
-    @patch("fructosa.conf.FructosaDConf._add_arguments")
-    @patch("fructosa.conf.FructosaDConf._create_cl_parser")
-    def test_get_conf_from_command_line_calls_add_arguments_in_second_place(
-            self, pcreate_cl_parser, padd_arguments, pparse_arguments):
-        padd_arguments.side_effect = Exception
-        with self.assertRaises(Exception):
-            self.empty_init_instance._get_conf_from_command_line()
-        pcreate_cl_parser.assert_called_once_with()
-        padd_arguments.assert_called_once_with()
-        pparse_arguments.assert_not_called()
-
-    @patch("fructosa.conf.FructosaDConf._parse_arguments")
-    @patch("fructosa.conf.FructosaDConf._add_arguments")
-    @patch("fructosa.conf.FructosaDConf._create_cl_parser")
-    def test_get_conf_from_command_line_calls_parse_arguments_last(
-            self, pcreate_cl_parser, padd_arguments, pparse_arguments):
-        self.empty_init_instance._get_conf_from_command_line()
-        pcreate_cl_parser.assert_called_once_with()
-        padd_arguments.assert_called_once_with()
-        pparse_arguments.assert_called_once_with()
-
-    @patch("fructosa.conf.argparse.ArgumentParser")
-    def test_create_cl_parser_creates_ArgumentParser_instance(self, pArgumentParser):
-        self.empty_init_instance._create_cl_parser()
-        pArgumentParser.assert_called_once_with(description=self.empty_init_instance.description)
-        
-    @patch("fructosa.conf.argparse.ArgumentParser")
-    def test_create_cl_parser_sets_cl_parser(self, pArgumentParser):
-        parser = MagicMock()
-        pArgumentParser.return_value = parser
-        self.empty_init_instance._create_cl_parser()
-        self.assertEqual(self.empty_init_instance._cl_parser, parser)
-
-    def test_add_arguments_add_expected_arguments_to_cl_parser(self):
-        from fructosa.conf import (
-            ACTION_ARGUMENT, PIDFILE_ARGUMENT, FRUCTOSAD_DEFAULT_PIDFILE,
-            CONFIGFILE_ARGUMENT, FRUCTOSAD_DEFAULT_CONFIGFILE, 
-        )
-        conf = self.empty_init_instance
-        conf._add_arguments()
-        PIDFILE_ARGUMENT[1][1]["default"] = FRUCTOSAD_DEFAULT_PIDFILE
-        CONFIGFILE_ARGUMENT[1][1]["default"] = FRUCTOSAD_DEFAULT_CONFIGFILE
-        calls = []
-        for name, args in ACTION_ARGUMENT, PIDFILE_ARGUMENT, CONFIGFILE_ARGUMENT:
-            calls.append(call(*args[0], **args[1]))
-        conf._cl_parser.add_argument.assert_has_calls(calls, any_order=True)
-
-    def test_parse_arguments_calls_cl_parsers_parse_args_method(self):
-        argv = MagicMock()
-        conf = self.empty_init_instance
-        conf._argv = argv
-        conf._parse_arguments()
-        conf._cl_parser.parse_args.assert_called_once_with(argv)
-
-    def test_parse_arguments_sets_command_line_conf_attribute(self):
-        args = MagicMock()
-        conf = self.empty_init_instance
-        conf._cl_parser.parse_args.return_value = args
-        conf._argv = MagicMock()
-        conf._parse_arguments()
-        self.assertEqual(conf._command_line_conf, vars(args))
 
     def test_getitem_wraps_command_line_confs_getitem(self):
         key = MagicMock()
@@ -533,8 +407,7 @@ class LAgentConfTestCaseBase(unittest.TestCase):
     @patch("fructosa.conf.LAgentConf._set_config_file")                
     @patch("fructosa.conf.LAgentConf._get_conf_from_config_file")
     @patch("fructosa.conf.LAgentConf._get_conf_from_command_line")
-    @patch("fructosa.conf.LAgentConf._set_argv")
-    def setUp(self, pset_argv, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
+    def setUp(self, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
               psetup_logging, pfinalize_after_config_file):
         self.test_class = fructosa.conf.LAgentConf
         self.empty_init_instance = self.test_class()
@@ -684,8 +557,7 @@ class LMasterConfTestCase(unittest.TestCase):
     @patch("fructosa.conf.LMasterConf._set_config_file")                
     @patch("fructosa.conf.LMasterConf._get_conf_from_config_file")
     @patch("fructosa.conf.LMasterConf._get_conf_from_command_line")
-    @patch("fructosa.conf.LMasterConf._set_argv")
-    def setUp(self, pset_argv, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
+    def setUp(self, pget_cnf_frm_cmdl, pget_cnf_frm_cfgf, pset_config_file,
               pprepare_logging, ppost_process_configuration):
         self.test_class = fructosa.conf.LMasterConf
         self.empty_init_instance = self.test_class()

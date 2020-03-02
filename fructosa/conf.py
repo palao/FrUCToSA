@@ -21,7 +21,6 @@
 #
 #######################################################################
 
-import sys
 import os
 import argparse
 import configparser
@@ -83,22 +82,16 @@ class FructosaDConf:
     arguments = (ACTION_ARGUMENT, PIDFILE_ARGUMENT, CONFIGFILE_ARGUMENT)
     
     def __init__(self, argv=None):
-        self._set_argv(argv)
-        self._get_conf_from_command_line()
+        self._get_conf_from_command_line() #  CL
         self._set_config_file()
         self._get_conf_from_config_file()
         self._prepare_logging()
         self._post_process_configuration()
 
-    def _set_argv(self, argv):
-        if argv is None:
-            argv = sys.argv[1:]
-        self._argv = argv
-
-    def _get_conf_from_command_line(self):
-        self._create_cl_parser()
-        self._add_arguments()
-        self._parse_arguments()
+    def _get_conf_from_command_line(self): #  CL
+        self._create_cl_parser() #  CL
+        self._add_arguments() #  CL
+        self._parse_arguments() #  CL
 
     def _set_config_file(self):
         self._config_file = self[CONFIGFILE_STR]#self.default_values[CONFIGFILE_STR]
@@ -165,23 +158,23 @@ class FructosaDConf:
                     value = OWN_LOG_BACKUPCOUNT_TYPE(value)
                 self.logging[key] = value
 
-    def _create_cl_parser(self):
-        parser = argparse.ArgumentParser(description=self.description)
-        self._cl_parser = parser
+    def _create_cl_parser(self): #  CL
+        parser = argparse.ArgumentParser(description=self.description) #  CL
+        self._cl_parser = parser #  CL
 
-    def _add_arguments(self):
-        for name, arg in self.arguments:
-            args, kwargs = arg
-            if name in self.default_values:
-                kwargs["default"] = self.default_values[name]
-            self._cl_parser.add_argument(*args, **kwargs)
+    def _add_arguments(self): #  CL
+        for name, arg in self.arguments: #  CL
+            args, kwargs = arg #  CL
+            if name in self.default_values: #  CL
+                kwargs["default"] = self.default_values[name] #  CL
+            self._cl_parser.add_argument(*args, **kwargs) #  CL
         
-    def _parse_arguments(self):
-        args = self._cl_parser.parse_args(self._argv)
-        self._command_line_conf = vars(args)
+    def _parse_arguments(self): #  CL
+        args = self._cl_parser.parse_args(self._argv) #  CL
+        self._command_line_conf = vars(args) #  CL
 
-    def __getitem__(self, key):
-        return self._command_line_conf[key]
+    def __getitem__(self, key): #  CL
+        return self._command_line_conf[key] #  CL
 
 
 class LAgentConf(FructosaDConf):
