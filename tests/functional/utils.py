@@ -21,22 +21,13 @@
 #
 #######################################################################
 
-import unittest
-import functools
 
-from .utils import run_program
-
-from fructosa.constants import MAKE_DASHBOARD_PROGRAM
+import subprocess as sp
+from contextlib import contextmanager
 
 
-make_fructosa_dashboard = functools.partial(run_program, MAKE_DASHBOARD_PROGRAM)
-
-
-class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
-    def test_executable_to_create_json_grafana_dashboards(self):
-        #  After starting the FrUCToSA system, Tux would like to connect
-        # it to Grafana. He finds out that there is an executable shipped
-        # with the package that can create a dashboard importable by
-        # Grafana. Great! Time to find out more about it:
-        with make_fructosa_dashboard("-h") as result_mk_fruct_dash:
-            self.assertIn("HOST file required", result_mk_fruct_dash)
+@contextmanager
+def run_program(program, *args):
+    line = (program,)+args
+    result = sp.run(line, stdout=sp.PIPE, stderr=sp.PIPE)
+    yield result

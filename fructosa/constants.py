@@ -123,3 +123,5 @@ LMASTER_TO_GRAPHITE_CONNECTING_MSG = (
 LMASTER_TO_GRAPHITE_RETRY_MSG = "... connection to {host} failed. Retrying."
 WRONG_MESSAGE_TO_GRAPHITE_MSG = "Measurement from '{sensor}' cannot be delivered to Graphite"
 WRONG_MESSAGE_TO_GRAPHITE_DETAIL_MSG = "[sensor={sensor}] measurement={measurement}"
+
+MAKE_DASHBOARD_PROGRAM = "make-fructosa-dashboard"
