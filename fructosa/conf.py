@@ -80,6 +80,7 @@ class FructosaDConf:
         PIDFILE_STR: FRUCTOSAD_DEFAULT_PIDFILE,
         CONFIGFILE_STR: FRUCTOSAD_DEFAULT_CONFIGFILE
     }
+    arguments = (ACTION_ARGUMENT, PIDFILE_ARGUMENT, CONFIGFILE_ARGUMENT)
     
     def __init__(self, argv=None):
         self._set_argv(argv)
@@ -169,7 +170,7 @@ class FructosaDConf:
         self._cl_parser = parser
 
     def _add_arguments(self):
-        for name, arg in (ACTION_ARGUMENT, PIDFILE_ARGUMENT, CONFIGFILE_ARGUMENT):
+        for name, arg in self.arguments:
             args, kwargs = arg
             if name in self.default_values:
                 kwargs["default"] = self.default_values[name]
