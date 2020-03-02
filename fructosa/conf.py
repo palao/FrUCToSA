@@ -25,10 +25,11 @@ import os
 import argparse
 import configparser
 
-from fructosa.logs import setup_logging
-from fructosa.sensors import sensor_factory
+from .logs import setup_logging
+from .sensors import sensor_factory
+from .ui.cl import CLConf
 
-from fructosa.constants import (
+from .constants import (
     DEFAULT_PID_DIR, DEFAULT_PROTO_PIDFILE, ACTION_STR, ACTION_HELP, ACTION_CHOICES,
     PIDFILE_OPTION_ALIASES, PIDFILE_HELP, PIDFILE_STR,
     FRUCTOSAD_PROGRAM, FRUCTOSAD_DESCRIPTION, FRUCTOSAD_DEFAULT_CONFIGFILE, 
@@ -89,9 +90,12 @@ class FructosaDConf:
         self._post_process_configuration()
 
     def _get_conf_from_command_line(self): #  CL
-        self._create_cl_parser() #  CL
-        self._add_arguments() #  CL
-        self._parse_arguments() #  CL
+        self._command_line_conf = CLConf(
+            description=self.description, arguments=self.arguments
+        )
+        #self._create_cl_parser() #  CL
+        #self._add_arguments() #  CL
+        #self._parse_arguments() #  CL
 
     def _set_config_file(self):
         self._config_file = self[CONFIGFILE_STR]#self.default_values[CONFIGFILE_STR]

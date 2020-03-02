@@ -52,8 +52,8 @@ class FructosaDConfTestCase(unittest.TestCase):
         self.logger = logger
         self.test_class = fructosa.conf.FructosaDConf
         self.empty_init_instance = self.test_class()
-        mocked_cl_parser = MagicMock()
-        self.empty_init_instance._cl_parser = mocked_cl_parser
+        #mocked_cl_parser = MagicMock()
+        #self.empty_init_instance._cl_parser = mocked_cl_parser
         
     def test_instance_has_description_attribute(self):
         from fructosa.constants import FRUCTOSAD_DESCRIPTION
@@ -158,6 +158,16 @@ class FructosaDConfTestCase(unittest.TestCase):
         ppost_process_configuration.assert_called_once_with()
         pprepare_logging.assert_called_once_with()
 
+    @patch("fructosa.conf.CLConf")
+    def test_get_conf_from_command_line_creates_CLConf_object(self, pCLConf):
+        instance = self.empty_init_instance
+        instance._get_conf_from_command_line()
+        pCLConf.assert_called_once_with(
+            arguments=instance.arguments,
+            description=instance.description
+        )
+        self.assertEqual(instance._command_line_conf, pCLConf.return_value)
+    
     @patch("fructosa.conf.FructosaDConf._parse_config_file")
     @patch("fructosa.conf.FructosaDConf._create_config_parser")
     def test_get_conf_from_config_file_call_sequence(
@@ -411,8 +421,8 @@ class LAgentConfTestCaseBase(unittest.TestCase):
               psetup_logging, pfinalize_after_config_file):
         self.test_class = fructosa.conf.LAgentConf
         self.empty_init_instance = self.test_class()
-        mocked_cl_parser = MagicMock()
-        self.empty_init_instance._cl_parser = mocked_cl_parser
+        #mocked_cl_parser = MagicMock()
+        #self.empty_init_instance._cl_parser = mocked_cl_parser
         
     
 class LAgentConfTestCase(LAgentConfTestCaseBase):
@@ -561,8 +571,8 @@ class LMasterConfTestCase(unittest.TestCase):
               pprepare_logging, ppost_process_configuration):
         self.test_class = fructosa.conf.LMasterConf
         self.empty_init_instance = self.test_class()
-        mocked_cl_parser = MagicMock()
-        self.empty_init_instance._cl_parser = mocked_cl_parser
+        #mocked_cl_parser = MagicMock()
+        #self.empty_init_instance._cl_parser = mocked_cl_parser
 
     def test_instance_has_description_attribute(self):
         from fructosa.constants import LMASTER_DESCRIPTION
