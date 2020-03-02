@@ -48,3 +48,5 @@ class CLConf:
         args = self._cl_parser.parse_args()
         self._command_line_conf = vars(args)
 
+    def __getitem__(self, item):
+        return self._command_line_conf[item]

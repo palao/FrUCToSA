@@ -156,3 +156,12 @@ class CLConfParseArgumentsTestCase(InitializedCLConfMixIn, unittest.TestCase):
         cl._parse_arguments()
         self.assertEqual(cl._command_line_conf, vars(args))
 
+
+class CLConfGetitemTestCase(InitializedCLConfMixIn, unittest.TestCase):
+    def test_getitem_wraps_cl_parser_getitem(self):
+        cl = self.instance
+        cl._command_line_conf = MagicMock()
+        cl._command_line_conf.__getitem__.return_value = 987
+        a = cl["endeve la sole"]
+        self.assertEqual(a, 987)
+        
