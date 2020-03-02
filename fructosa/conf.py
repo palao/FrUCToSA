@@ -159,8 +159,8 @@ class FructosaDConf:
                     value = OWN_LOG_BACKUPCOUNT_TYPE(value)
                 self.logging[key] = value
 
-    def __getitem__(self, key): #  CL
-        return self._command_line_conf[key] #  CL
+    def __getitem__(self, key):
+        return self._command_line_conf[key]
 
 
 class LAgentConf(FructosaDConf):
