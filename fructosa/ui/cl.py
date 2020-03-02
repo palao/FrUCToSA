@@ -33,6 +33,12 @@ class CLConf:
         self._add_arguments()
         self._parse_arguments()
 
-    _create_cl_parser = None
-    _add_arguments = None
-    _parse_arguments = None
+    def _create_cl_parser(self):
+        parser = argparse.ArgumentParser(description=self.description)
+        self._cl_parser = parser
+
+    def _add_arguments(self):
+        pass
+    
+    def _parse_arguments(self):
+        pass

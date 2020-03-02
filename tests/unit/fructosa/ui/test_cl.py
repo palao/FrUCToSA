@@ -22,7 +22,7 @@
 #######################################################################
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from fructosa.ui.cl import CLConf
 
@@ -67,20 +67,35 @@ class CLConfInitTestCase(unittest.TestCase):
         pparse_arguments.assert_called_once_with()
 
 
+class InitializedCLConfMixIn:
+    def setUp(self):
+        ARG_ONE = (
+            "somethong",
+            (("-s", "--somethong"), dict(help="somethong help")),
+        )
+        ARG_TWO = (
+            "anicing",
+            (("-a", "--anicing"), dict(help="anicing help")),
+        )
+        self.desc = "another description"
+        self.arguments = (ARG_ONE, ARG_TWO)
+        self.instance = CLConf(description=self.desc, arguments=self.arguments)
+        
+        
 @patch("fructosa.ui.cl.argparse.ArgumentParser")
-class CLConfCreateCLParserTestCase(unittest.TestCase):
+class CLConfCreateCLParserTestCase(InitializedCLConfMixIn, unittest.TestCase):
     def test_create_cl_parser_creates_ArgumentParser_instance(self, pArgumentParser):
-        self.empty_init_instance._create_cl_parser()
-        pArgumentParser.assert_called_once_with(description=self.empty_init_instance.description)
+        self.instance._create_cl_parser()
+        pArgumentParser.assert_called_once_with(description=self.desc)
         
     def test_create_cl_parser_sets_cl_parser(self, pArgumentParser):
         parser = MagicMock()
         pArgumentParser.return_value = parser
-        self.empty_init_instance._create_cl_parser()
-        self.assertEqual(self.empty_init_instance._cl_parser, parser)
+        self.instance._create_cl_parser()
+        self.assertEqual(self.instance._cl_parser, parser)
 
 
-class CLConfParseArgumentsTestCase(unittest.TestCase):
+class CLConfParseArgumentsTestCase(unittest.TestCase, InitializedCLConfMixIn):
     def test_add_arguments_add_expected_arguments_to_cl_parser(self):
         from fructosa.conf import (
             ACTION_ARGUMENT, PIDFILE_ARGUMENT, FRUCTOSAD_DEFAULT_PIDFILE,

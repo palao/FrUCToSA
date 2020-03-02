@@ -162,10 +162,6 @@ class FructosaDConf:
                     value = OWN_LOG_BACKUPCOUNT_TYPE(value)
                 self.logging[key] = value
 
-    def _create_cl_parser(self): #  CL
-        parser = argparse.ArgumentParser(description=self.description) #  CL
-        self._cl_parser = parser #  CL
-
     def _add_arguments(self): #  CL
         for name, arg in self.arguments: #  CL
             args, kwargs = arg #  CL
