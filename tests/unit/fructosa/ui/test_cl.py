@@ -22,7 +22,7 @@
 #######################################################################
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 from fructosa.ui.cl import CLConf
 
@@ -69,17 +69,26 @@ class CLConfInitTestCase(unittest.TestCase):
 
 class InitializedCLConfMixIn:
     def setUp(self):
-        ARG_ONE = (
+        self.ARG_ONE = (
             "somethong",
             (("-s", "--somethong"), dict(help="somethong help")),
         )
-        ARG_TWO = (
+        self.ARG_TWO = (
             "anicing",
             (("-a", "--anicing"), dict(help="anicing help")),
         )
+        self.default_values = {
+            "somethong": "ss2",
+            "anicing": "ddd",
+        }
         self.desc = "another description"
-        self.arguments = (ARG_ONE, ARG_TWO)
-        self.instance = CLConf(description=self.desc, arguments=self.arguments)
+        self.arguments = (self.ARG_ONE, self.ARG_TWO)
+        with patch("fructosa.ui.cl.CLConf._parse_arguments") as pparse:
+            with patch("fructosa.ui.cl.CLConf._add_arguments") as padd:
+                with patch("fructosa.ui.cl.CLConf._create_cl_parser") as pcrea:
+                    self.instance = CLConf(
+                        description=self.desc, arguments=self.arguments
+                    )
         
         
 @patch("fructosa.ui.cl.argparse.ArgumentParser")
@@ -95,33 +104,34 @@ class CLConfCreateCLParserTestCase(InitializedCLConfMixIn, unittest.TestCase):
         self.assertEqual(self.instance._cl_parser, parser)
 
 
-class CLConfParseArgumentsTestCase(unittest.TestCase, InitializedCLConfMixIn):
-    def test_add_arguments_add_expected_arguments_to_cl_parser(self):
+@patch("fructosa.ui.cl.argparse.ArgumentParser")
+class CLConfParseArgumentsTestCase(InitializedCLConfMixIn, unittest.TestCase):
+    def test_add_arguments_add_expected_arguments_to_cl_parser(self, pArgumentParser):
         from fructosa.conf import (
             ACTION_ARGUMENT, PIDFILE_ARGUMENT, FRUCTOSAD_DEFAULT_PIDFILE,
             CONFIGFILE_ARGUMENT, FRUCTOSAD_DEFAULT_CONFIGFILE, 
         )
-        conf = self.empty_init_instance
-        conf._add_arguments()
-        PIDFILE_ARGUMENT[1][1]["default"] = FRUCTOSAD_DEFAULT_PIDFILE
-        CONFIGFILE_ARGUMENT[1][1]["default"] = FRUCTOSAD_DEFAULT_CONFIGFILE
+        cl = self.instance
+        cl._add_arguments()
+        #self.ARG_ONE[1][1]["default"] = 
+        #CONFIGFILE_ARGUMENT[1][1]["default"] = FRUCTOSAD_DEFAULT_CONFIGFILE
         calls = []
         for name, args in ACTION_ARGUMENT, PIDFILE_ARGUMENT, CONFIGFILE_ARGUMENT:
             calls.append(call(*args[0], **args[1]))
         conf._cl_parser.add_argument.assert_has_calls(calls, any_order=True)
 
-    def test_parse_arguments_calls_cl_parsers_parse_args_method(self):
-        argv = MagicMock()
-        conf = self.empty_init_instance
-        conf._argv = argv
-        conf._parse_arguments()
-        conf._cl_parser.parse_args.assert_called_once_with(argv)
+    def test_parse_arguments_calls_cl_parsers_parse_args_method(self, pArgumentParser):
+        cl_parser = MagicMock()
+        cl = self.instance
+        cl._cl_parser = cl_parser
+        cl._parse_arguments()
+        cl_parser.parse_args.assert_called_once_with()
 
-    def test_parse_arguments_sets_command_line_conf_attribute(self):
+    def test_parse_arguments_sets_command_line_conf_attribute(self, pArgumentParser):
         args = MagicMock()
-        conf = self.empty_init_instance
-        conf._cl_parser.parse_args.return_value = args
-        conf._argv = MagicMock()
-        conf._parse_arguments()
-        self.assertEqual(conf._command_line_conf, vars(args))
+        cl = self.instance
+        cl._cl_parser = MagicMock()
+        cl._cl_parser.parse_args.return_value = args
+        cl._parse_arguments()
+        self.assertEqual(cl._command_line_conf, vars(args))
 

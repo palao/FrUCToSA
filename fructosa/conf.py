@@ -169,10 +169,6 @@ class FructosaDConf:
                 kwargs["default"] = self.default_values[name] #  CL
             self._cl_parser.add_argument(*args, **kwargs) #  CL
         
-    def _parse_arguments(self): #  CL
-        args = self._cl_parser.parse_args(self._argv) #  CL
-        self._command_line_conf = vars(args) #  CL
-
     def __getitem__(self, key): #  CL
         return self._command_line_conf[key] #  CL
 

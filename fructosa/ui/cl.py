@@ -41,4 +41,6 @@ class CLConf:
         pass
     
     def _parse_arguments(self):
-        pass
+        args = self._cl_parser.parse_args()
+        self._command_line_conf = vars(args)
+
