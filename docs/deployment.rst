@@ -1,5 +1,5 @@
-HOW to deploy
--------------
+HOW to deploy FrUCToSA
+----------------------
 
 1. Prepare config files ``qagent.conf`` and ``qmaster.conf``
 2. Prepare a host file for Ansible
