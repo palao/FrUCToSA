@@ -71,5 +71,5 @@ setup(name="FrUCToSA",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: System :: Monitoring",
     ],
-    test_suite="tests",
+    #test_suite="tests",
 )
