@@ -25,7 +25,31 @@ import argparse
 
 
 class CLConf:
-    def __init__(self, description, arguments, defaults):
+    def __init__(self, description: str, arguments, defaults):
+        """The arguments to the constractor are passed to an 
+        ArgumentParser instance. They are like follows:
+        
+        * `arguments` must be a sequence of tuples/lists of the form
+          (name: str, argument_definition: sequence)
+          where `argument_definition` is expected to be itself
+          (args: tuple, kwargs: dictionary)
+          They will be passed to the method add_argument of the parser
+          like this:
+          parser.add_argument(*args, **kwargs)
+
+          For example:
+          cl = CLConf(
+              description="my important program", 
+              arguments=[
+                  ("input file", (("-f", "--file"), {"help": "some help"}),
+                  ("version", (
+                      ("--version"), 
+                      {"action": "version", "version": "0.4.9"}
+                  ),
+                  ...
+              ]
+              defaults = {"input file": "mydefaultinput.conf"}
+        """
         self.description = description
         self.arguments = arguments
         self.defaults = defaults
