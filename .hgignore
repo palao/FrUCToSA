@@ -30,7 +30,7 @@ dist/*
 build/**
 
 # as well as the doc/_build dir:
-doc/_build/**
+docs/_build/**
 
 # and package related stuff:
 FrUCToSA.egg-info/**
