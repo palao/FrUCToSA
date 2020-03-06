@@ -125,4 +125,14 @@ WRONG_MESSAGE_TO_GRAPHITE_MSG = "Measurement from '{sensor}' cannot be delivered
 WRONG_MESSAGE_TO_GRAPHITE_DETAIL_MSG = "[sensor={sensor}] measurement={measurement}"
 
 MAKE_DASHBOARD_PROGRAM = "make-fructosa-dashboard"
-MAKE_DASHBOARD_DESCRIPTION = "utility to create Grafana dashboards with data from FrUCToSA"
+MAKE_DASHBOARD_DESCRIPTION = (
+    "utility to create Grafana dashboards to visualize data from FrUCToSA"
+)
+HOSTS_FILE_STR = "hosts"
+HOSTS_FILE_METAVAR = HOSTS_FILE_STR.upper()
+MAKE_DASHBOARD_HOSTS_HELP = (
+    "{uphosts} file in ini format (with section '[{hosts}]' "
+    "and inside that section, one hostname per line".format(
+        uphosts=HOSTS_FILE_METAVAR, hosts=HOSTS_FILE_STR
+    )
+)

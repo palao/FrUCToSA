@@ -22,7 +22,21 @@
 #######################################################################
 
 from ..ui.cl import CLConf
-from ..constants import MAKE_DASHBOARD_DESCRIPTION
+from ..constants import (
+    MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP, HOSTS_FILE_STR,
+    HOSTS_FILE_METAVAR,
+)
+
+
+HOSTS_FILE_ARG = (
+    HOSTS_FILE_STR,
+    ((HOSTS_FILE_STR,),
+         dict(help=MAKE_DASHBOARD_HOSTS_HELP, metavar=HOSTS_FILE_METAVAR))
+)
+
 
 def make_dashboard():
-    CLConf(description=MAKE_DASHBOARD_DESCRIPTION, defaults={})
+    CLConf(
+        description=MAKE_DASHBOARD_DESCRIPTION,
+        arguments=(HOSTS_FILE_ARG,)
+    )

@@ -25,14 +25,29 @@ import unittest
 from unittest.mock import patch
 
 from fructosa.grafana.dashboard import make_dashboard
-from fructosa.constants import MAKE_DASHBOARD_DESCRIPTION
+from fructosa.constants import (
+    MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP, HOSTS_FILE_METAVAR
+)
 
 
 class MakeDashboardTestCase(unittest.TestCase):
     def test_creates_CLConf_object(self):
+        expected_args = (
+            (
+                "hosts",
+                (
+                    ("hosts",),
+                    {
+                        "metavar": HOSTS_FILE_METAVAR,
+                        "help": MAKE_DASHBOARD_HOSTS_HELP
+                    }
+                )
+            ),
+        )
         with patch("fructosa.grafana.dashboard.CLConf") as pCLConf:
             make_dashboard()
+            
         pCLConf.assert_called_once_with(
             description=MAKE_DASHBOARD_DESCRIPTION,
-            defaults={},
+            arguments=expected_args,
         )

@@ -26,7 +26,7 @@ import functools
 
 from .utils import run_program
 
-from fructosa.constants import MAKE_DASHBOARD_PROGRAM
+from fructosa.constants import MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR
 
 
 make_fructosa_dashboard = functools.partial(run_program, MAKE_DASHBOARD_PROGRAM)
@@ -39,7 +39,8 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         # with the package that can create a dashboard importable by
         # Grafana. Great! Time to find out more about it:
         with make_fructosa_dashboard("-h") as result_mk_fruct_dash:
+            uphosts = HOSTS_FILE_METAVAR
             self.assertIn(
-                "HOST file required",
+                f"the following arguments are required: {uphosts}",
                 result_mk_fruct_dash.stdout.decode()
             )
