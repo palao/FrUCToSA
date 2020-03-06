@@ -13,6 +13,7 @@ Welcome to FrUCToSA's documentation!
    usage/deployment
 
    development/index
+   development/requirements
    development/roadmap
    development/architecture
 
