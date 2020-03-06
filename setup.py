@@ -54,6 +54,7 @@ setup(name="FrUCToSA",
         "fructosad = fructosa.fructosad:main",
         "lagent = fructosa.lagent:main",
         "lmaster = fructosa.lmaster:main",
+        "make-fructosa-dashboard = fructosa.grafana.dashboard:make_dashboard",
         ],
     },
     classifiers=[

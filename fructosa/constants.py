@@ -125,3 +125,4 @@ WRONG_MESSAGE_TO_GRAPHITE_MSG = "Measurement from '{sensor}' cannot be delivered
 WRONG_MESSAGE_TO_GRAPHITE_DETAIL_MSG = "[sensor={sensor}] measurement={measurement}"
 
 MAKE_DASHBOARD_PROGRAM = "make-fructosa-dashboard"
+MAKE_DASHBOARD_DESCRIPTION = "utility to create Grafana dashboards with data from FrUCToSA"

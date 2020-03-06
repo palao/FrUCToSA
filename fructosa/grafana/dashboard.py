@@ -21,5 +21,8 @@
 #
 #######################################################################
 
+from ..ui.cl import CLConf
+from ..constants import MAKE_DASHBOARD_DESCRIPTION
 
-make_dashboard = None
+def make_dashboard():
+    CLConf(description=MAKE_DASHBOARD_DESCRIPTION)
