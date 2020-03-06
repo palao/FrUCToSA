@@ -3,6 +3,25 @@ Development notes
 #################
 
 
+***********************
+HOWTO release a version
+***********************
+
+1. Ensure that the tests pass: ``tox``
+2. Update ``CHANGELOG.rst`` and ``docs/development/roadmap.rst``
+3. Update ``README.rst`` if needed
+4. Make a tag: ``hg tag ...``
+5. Make a source distribution and a wheel::
+
+     $ python setup.py sdist bdist_wheel
+
+6. Upload the generated files to PyPI::
+
+     $ twine upload dist/...tar.gz dist/...py3-non-any.whl
+
+7. Update project's homepage, if needed.
+
+   
 **************
 Some decisions
 **************
