@@ -33,5 +33,6 @@ class MakeDashboardTestCase(unittest.TestCase):
         with patch("fructosa.grafana.dashboard.CLConf") as pCLConf:
             make_dashboard()
         pCLConf.assert_called_once_with(
-            description=MAKE_DASHBOARD_DESCRIPTION
+            description=MAKE_DASHBOARD_DESCRIPTION,
+            defaults={},
         )

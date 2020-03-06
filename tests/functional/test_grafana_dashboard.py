@@ -39,4 +39,7 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         # with the package that can create a dashboard importable by
         # Grafana. Great! Time to find out more about it:
         with make_fructosa_dashboard("-h") as result_mk_fruct_dash:
-            self.assertIn("HOST file required", result_mk_fruct_dash)
+            self.assertIn(
+                "HOST file required",
+                result_mk_fruct_dash.stdout.decode()
+            )

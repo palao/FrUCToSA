@@ -25,7 +25,7 @@ import argparse
 
 
 class CLConf:
-    def __init__(self, description: str, arguments, defaults):
+    def __init__(self, description: str="", arguments=None, defaults=None):
         """The arguments to the constractor are passed to an 
         ArgumentParser instance. They are like follows:
         
@@ -51,8 +51,8 @@ class CLConf:
               defaults = {"input file": "mydefaultinput.conf"}
         """
         self.description = description
-        self.arguments = arguments
-        self.defaults = defaults
+        self.arguments = arguments or ()
+        self.defaults = defaults or {}
         self._create_cl_parser()
         self._add_arguments()
         self._parse_arguments()

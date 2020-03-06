@@ -35,6 +35,13 @@ class CLConfInitTestCase(unittest.TestCase):
         self.desc = "my Funny description"
         self.arguments = ("some", "arguments")
         self.defaults = {}
+
+    def test_init_needs_no_argument(self,
+          pcreate_cl_parser, padd_arguments, pparse_arguments):
+        instance = CLConf()
+        self.assertEqual(instance.description, "")
+        self.assertEqual(instance.arguments, ())
+        self.assertEqual(instance.defaults, {})
         
     def test_init_sets_some_attributes(self,
           pcreate_cl_parser, padd_arguments, pparse_arguments):
