@@ -78,8 +78,8 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
                 ),
                 joined_out
             )
-            # Fine, so he prepares a hosts file
-        #...
+        # Fine, so he prepares a hosts file
+        self.fail("the show must go on...")
         # and creates a dashboard from it:
         #...
         # it looks good. Let us try to validate it:
