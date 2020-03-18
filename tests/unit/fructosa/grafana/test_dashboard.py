@@ -26,7 +26,9 @@ from unittest.mock import patch
 
 from fructosa.grafana.dashboard import make_dashboard
 from fructosa.constants import (
-    MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP, HOSTS_FILE_METAVAR
+    MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP, HOSTS_FILE_METAVAR,
+    HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION,
+    HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP,
 )
 
 
@@ -40,6 +42,16 @@ class MakeDashboardTestCase(unittest.TestCase):
                     {
                         "metavar": HOSTS_FILE_METAVAR,
                         "help": MAKE_DASHBOARD_HOSTS_HELP
+                    }
+                )
+            ),
+            (
+                "section",
+                (
+                    (HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION),
+                    {
+                        "metavar": HOSTS_SECTION_METAVAR,
+                        "help": HOSTS_SECTION_HELP
                     }
                 )
             ),

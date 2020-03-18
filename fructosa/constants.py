@@ -136,3 +136,11 @@ MAKE_DASHBOARD_HOSTS_HELP = (
         uphosts=HOSTS_FILE_METAVAR, hosts=HOSTS_FILE_STR
     )
 )
+
+HOSTS_SECTION_STR = "section"
+HOSTS_SECTION_SHORT_OPTION = "-s"
+HOSTS_SECTION_LONG_OPTION = f"--{HOSTS_SECTION_STR}"
+HOSTS_SECTION_METAVAR = HOSTS_SECTION_STR.upper()
+HOSTS_SECTION_HELP = (
+    "section in the file where the hosts can be found, one hostname per line"
+)

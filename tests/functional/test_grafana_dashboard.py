@@ -27,7 +27,10 @@ import functools
 from .utils import run_program
 
 from fructosa.constants import (
-    MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR, MAKE_DASHBOARD_HOSTS_HELP
+    MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR, MAKE_DASHBOARD_HOSTS_HELP,
+    HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION,
+    HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP,
+    
 )
 
 
@@ -38,6 +41,10 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
     def test_executable_to_create_json_grafana_dashboards(self):
         uphosts = HOSTS_FILE_METAVAR
         hosts_help = MAKE_DASHBOARD_HOSTS_HELP
+        short_section = HOSTS_SECTION_SHORT_OPTION
+        long_section = HOSTS_SECTION_LONG_OPTION
+        section_meta = HOSTS_SECTION_METAVAR
+        section_help = HOSTS_SECTION_HELP
         #  After starting the FrUCToSA system, Tux would like to connect
         # it to Grafana. He finds out that there is an executable shipped
         # with the package that can create a dashboard importable by
@@ -65,10 +72,13 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
                 joined_out
             )
             self.assertIn(
-                f"optional arguments: {} {}, {} {} {section_help}",
+                (f"optional arguments: -h, --help show this help message and exit"
+                 f" {short_section} {section_meta}"
+                 f", {long_section} {section_meta} {section_help}"
+                ),
                 joined_out
             )
-        # Fine, so he prepares a hosts file
+            # Fine, so he prepares a hosts file
         #...
         # and creates a dashboard from it:
         #...
