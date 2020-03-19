@@ -31,3 +31,17 @@ def run_program(program, *args):
     line = (program,)+args
     result = sp.run(line, stdout=sp.PIPE, stderr=sp.PIPE)
     yield result
+
+
+def normalize_whitespaces(text):
+    """Normalize the whitespaces in the text: any whitespace sequence -> ' '
+    """
+    text = text.replace("\n", " ")
+    while True:
+        new_text = text.replace("\t", " ")
+        new_new_text = new_text.replace("  ", " ")
+        if new_new_text == text:
+            break
+        else:
+            text = new_new_text
+    return text

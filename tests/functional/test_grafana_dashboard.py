@@ -23,8 +23,11 @@
 
 import unittest
 import functools
+import json
 
-from .utils import run_program
+import pytest
+
+from .utils import run_program, normalize_whitespaces
 
 from fructosa.constants import (
     MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR, MAKE_DASHBOARD_HOSTS_HELP,
@@ -38,6 +41,22 @@ make_fructosa_dashboard = functools.partial(run_program, MAKE_DASHBOARD_PROGRAM)
 
 
 class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def hostsfiles(self, tmpdir):
+        tmpdir.chdir()
+        # One host:
+        self.one_host_file = "one_host"
+        self.one_host_name = "funnyhost"
+        one_host_contents = f"[hosts]\n{self.one_host_name}\n"
+        tmpdir.join(self.one_host_file).write(one_host_contents)
+        # Multiple hosts:
+        self.multi_hosts_file = "multiple_hosts"
+        self.multi_hosts = ["hoston01", "hoston02", "hoston03"]
+        multi_hosts_contents = "[hosts]\n"
+        for h in self.multi_hosts:
+            multi_hosts_contents += "{h}\n"
+        tmpdir.join(self.multi_hosts_file).write(multi_hosts_contents)
+        
     def test_executable_to_create_json_grafana_dashboards(self):
         uphosts = HOSTS_FILE_METAVAR
         hosts_help = MAKE_DASHBOARD_HOSTS_HELP
@@ -57,32 +76,35 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
             )
         # Okay, okay. He tries the "-h" option:
         with make_fructosa_dashboard("-h") as result_mk_fruct_dash:
-            # <streaming cl output>
-            joined_out = result_mk_fruct_dash.stdout.decode().replace("\n", " ")
-            while True:
-                new_joined = joined_out.replace("\t", " ")
-                new_new_joined = new_joined.replace("  ", " ")
-                if new_new_joined == joined_out:
-                    break
-                else:
-                    joined_out = new_new_joined
-            # </streaming cl output>
+            normal_out = normalize_whitespaces(
+                result_mk_fruct_dash.stdout.decode()
+            )
             self.assertIn(
                 f"positional arguments: {uphosts} {hosts_help}",
-                joined_out
+                normal_out
             )
             self.assertIn(
                 (f"optional arguments: -h, --help show this help message and exit"
                  f" {short_section} {section_meta}"
                  f", {long_section} {section_meta} {section_help}"
                 ),
-                joined_out
+                normal_out
             )
-        # Fine, so he prepares a hosts file
-        self.fail("the show must go on...")
-        # and creates a dashboard from it:
-        #...
-        # it looks good. Let us try to validate it:
-        # ...
+        #  Fine, so he prepares a hosts file with only one file and creates
+        # a dashboard from it:
+        with make_fructosa_dashboard(self.one_host_file) as result:
+            normal_out = normalize_whitespaces(result.stdout.decode())
+            self.assertIn(self.one_host_name, normal_out)
+            # it looks good. Is it valid json? Let us try to validate it:
+            json.loads(normal_out)
         # Now he can import the created dashboard in Grafana and use it!
+        #  ...but actually he is interested in having a dashboard with multiple
+        # hosts. He he goes to test this:
+        with make_fructosa_dashboard(self.multi_hosts_file) as result:
+            normal_out = normalize_whitespaces(result.stdout.decode())
+            for host in self.multi_hosts:
+                self.assertIn(host, normal_out)
+            # it looks good. Is it valid json? Let us try to validate it:
+            json.loads(normal_out)
+        
             
