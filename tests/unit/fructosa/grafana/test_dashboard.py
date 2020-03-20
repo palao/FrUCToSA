@@ -34,8 +34,8 @@ from fructosa.constants import (
 from fructosa.grafana.node import node_template_dict
 
 
-@patch("fructosa.grafana.dashboard.collect_hosts")
-@patch("fructosa.grafana.dashboard.render_dashboard_template")
+@patch("fructosa.grafana.dashboard._collect_hosts")
+@patch("fructosa.grafana.dashboard._render_dashboard_template")
 @patch("fructosa.grafana.dashboard.CLConf")
 @patch("fructosa.grafana.dashboard.json.dumps")
 @patch("fructosa.grafana.dashboard.print")
@@ -92,3 +92,8 @@ class MakeDashboardTestCase(unittest.TestCase):
             mcollect_hosts):
         make_dashboard()
         mcollect_hosts.assert_called_once_with(pCLConf.return_value[HOSTS_FILE_STR])
+
+
+class RenderDashboardTemplateTestCase(unittest.TestCase):
+    def test_returns_result_of_what(self):
+        self.fail()

@@ -43,11 +43,11 @@ HOSTS_SECTION_ARG = (
 )
 
 
-def collect_hosts():
+def _collect_hosts():
     pass
 
 
-def render_dashboard_template():
+def _render_dashboard_template():
     pass
 
 
@@ -56,7 +56,7 @@ def make_dashboard():
         description=MAKE_DASHBOARD_DESCRIPTION,
         arguments=(HOSTS_FILE_ARG, HOSTS_SECTION_ARG)
     )
-    hosts = collect_hosts(conf[HOSTS_FILE_STR])
-    dashboard_dict = render_dashboard_template(hosts)
+    hosts = _collect_hosts(conf[HOSTS_FILE_STR])
+    dashboard_dict = _render_dashboard_template(hosts)
     dashboard_json = json.dumps(dashboard_dict)
     print(dashboard_json)
