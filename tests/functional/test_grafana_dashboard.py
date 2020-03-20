@@ -41,6 +41,7 @@ make_fructosa_dashboard = functools.partial(run_program, MAKE_DASHBOARD_PROGRAM)
 
 
 class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
+    # 'autouse' to use the fixture in current and the included scopes
     @pytest.fixture(autouse=True)
     def hostsfiles(self, tmpdir):
         tmpdir.chdir()
@@ -51,10 +52,10 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         tmpdir.join(self.one_host_file).write(one_host_contents)
         # Multiple hosts:
         self.multi_hosts_file = "multiple_hosts"
-        self.multi_hosts = ["hoston01", "hoston02", "hoston03"]
+        self.multi_hosts = ["hoston{:02d}".format(_) for _ in range(3)]
         multi_hosts_contents = "[hosts]\n"
         for h in self.multi_hosts:
-            multi_hosts_contents += "{h}\n"
+            multi_hosts_contents += f"{h}\n"
         tmpdir.join(self.multi_hosts_file).write(multi_hosts_contents)
         
     def test_executable_to_create_json_grafana_dashboards(self):
@@ -69,7 +70,6 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         # with the package that can create a dashboard importable by
         # Grafana. Great! Time to find out more about it:
         with make_fructosa_dashboard() as result_mk_fruct_dash:
-            
             self.assertIn(
                 f"the following arguments are required: {uphosts}",
                 result_mk_fruct_dash.stderr.decode()

@@ -21,6 +21,8 @@
 #
 #######################################################################
 
+import json
+
 from ..ui.cl import CLConf
 from ..constants import (
     MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP, HOSTS_FILE_STR,
@@ -41,8 +43,20 @@ HOSTS_SECTION_ARG = (
 )
 
 
+def collect_hosts():
+    pass
+
+
+def render_dashboard_template():
+    pass
+
+
 def make_dashboard():
-    CLConf(
+    conf = CLConf(
         description=MAKE_DASHBOARD_DESCRIPTION,
         arguments=(HOSTS_FILE_ARG, HOSTS_SECTION_ARG)
     )
+    hosts = collect_hosts(conf[HOSTS_FILE_STR])
+    dashboard_dict = render_dashboard_template(hosts)
+    dashboard_json = json.dumps(dashboard_dict)
+    print(dashboard_json)
