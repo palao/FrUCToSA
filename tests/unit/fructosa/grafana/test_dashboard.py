@@ -24,14 +24,16 @@
 import unittest
 from unittest.mock import patch
 
-from fructosa.grafana.dashboard import make_dashboard
+from fructosa.grafana.dashboard import (
+    make_dashboard, _render_dashboard_template
+)
 from fructosa.constants import (
     MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP,
     HOSTS_FILE_STR, HOSTS_FILE_METAVAR,
     HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION,
     HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP,
 )
-from fructosa.grafana.node import node_template_dict
+from fructosa.grafana.node import node_template_dict, node_panels_template
 
 
 @patch("fructosa.grafana.dashboard._collect_hosts")
@@ -95,5 +97,39 @@ class MakeDashboardTestCase(unittest.TestCase):
 
 
 class RenderDashboardTemplateTestCase(unittest.TestCase):
-    def test_returns_result_of_what(self):
-        self.fail()
+    def test_hosts_included_in_dashboard_tags(self):
+        hosts = ("mylittle host",)
+        dashboard = _render_dashboard_template(*hosts)
+        for host in hosts:
+            self.assertIn(host, dashboard["tags"])
+                              
+    def test_returns_dashboard_with_one_host_if_one_argument(self):
+        dashboard = _render_dashboard_template("mylittle host")
+        one_dashboard_num_panels = len(node_panels_template)
+        self.assertEqual(len(dashboard["panels"]), one_dashboard_num_panels)
+
+    def test_panels_have_host_name_with_one_host(self):
+        hosts = ("mylittle host",)
+        dashboard = _render_dashboard_template(*hosts)
+        host = hosts[0]
+        for panel in dashboard["panels"]:
+            try:
+                description = panel["description"]
+            except KeyError:
+                pass
+            else:
+                self.assertNotIn("{hostname}", description)
+            try:
+                targets = panel["targets"]
+            except KeyError:
+                pass
+            else:
+                for target in targets:
+                    try:
+                        target_str = target["target"]
+                    except KeyError:
+                        pass
+                    else:
+                        self.assertNotIn("{hostname}", target_str)
+                        self.assertIn(host, target_str)
+                        

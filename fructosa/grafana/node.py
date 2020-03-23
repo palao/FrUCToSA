@@ -49,7 +49,7 @@ node_template_dict = {
     "refresh": "10s",
     "schemaVersion": 19,
     "style": "dark",
-    "tags": ["{hostname}", "FrUCToSA"],
+    "tags": ["FrUCToSA"],
     "templating": {"list": []},
     "time": {"from": "now-6h", "to": "now"},
     "timepicker": {

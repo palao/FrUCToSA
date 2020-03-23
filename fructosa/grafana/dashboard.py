@@ -22,8 +22,10 @@
 #######################################################################
 
 import json
+import copy
 
 from ..ui.cl import CLConf
+from .node import node_template_dict, node_panels_template
 from ..constants import (
     MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP, HOSTS_FILE_STR,
     HOSTS_FILE_METAVAR, HOSTS_SECTION_STR, HOSTS_SECTION_SHORT_OPTION,
@@ -47,8 +49,28 @@ def _collect_hosts():
     pass
 
 
-def _render_dashboard_template():
-    pass
+def _render_dashboard_template(*hosts):
+    """It takes an iterable with hosts and produces a dictionary
+    defining a dashboard"""
+    dashboard = copy.deepcopy(node_template_dict)
+    for host in hosts:
+        dashboard["tags"].append(host)
+    dashboard["panels"] = copy.deepcopy(node_panels_template)
+    for panel in dashboard["panels"]:
+        try:
+            targets = panel["targets"]
+        except KeyError:
+            pass
+        else:
+            for target in targets:
+                target["target"] = target["target"].format(hostname=host)
+        try:
+            description = panel["description"]
+        except KeyError:
+            pass
+        else:
+            panel["description"] = description.format(hostname=host)
+    return dashboard
 
 
 def make_dashboard():
