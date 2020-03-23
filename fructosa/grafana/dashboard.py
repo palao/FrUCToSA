@@ -23,6 +23,7 @@
 
 import json
 import copy
+import configparser
 
 from ..ui.cl import CLConf
 from .node import node_template_dict, node_panels_template
@@ -45,8 +46,10 @@ HOSTS_SECTION_ARG = (
 )
 
 
-def _collect_hosts():
-    pass
+def _collect_hosts(file_name):
+    conf = configparser.ConfigParser(allow_no_value=True)
+    conf.read(file_name)
+    return tuple(conf[HOSTS_FILE_STR].keys())
 
 
 def _render_dashboard_template(*hosts):
@@ -79,6 +82,6 @@ def make_dashboard():
         arguments=(HOSTS_FILE_ARG, HOSTS_SECTION_ARG)
     )
     hosts = _collect_hosts(conf[HOSTS_FILE_STR])
-    dashboard_dict = _render_dashboard_template(hosts)
-    dashboard_json = json.dumps(dashboard_dict)
+    dashboard_dict = _render_dashboard_template(*hosts)
+    dashboard_json = json.dumps(dashboard_dict, indent=4)
     print(dashboard_json)

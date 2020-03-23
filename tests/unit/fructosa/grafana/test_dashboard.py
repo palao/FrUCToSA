@@ -22,10 +22,10 @@
 #######################################################################
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, mock_open
 
 from fructosa.grafana.dashboard import (
-    make_dashboard, _render_dashboard_template
+    make_dashboard, _render_dashboard_template, _collect_hosts
 )
 from fructosa.constants import (
     MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP,
@@ -34,6 +34,14 @@ from fructosa.constants import (
     HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP,
 )
 from fructosa.grafana.node import node_template_dict, node_panels_template
+
+
+HOST1 = "mastodonte"
+CONF_DATA1 = f"[hosts]\n{HOST1}\n"
+
+
+class ControlError(Exception):
+    pass
 
 
 @patch("fructosa.grafana.dashboard._collect_hosts")
@@ -81,13 +89,13 @@ class MakeDashboardTestCase(unittest.TestCase):
     def test_json_created_from_rendered_template(
             self, mprint, mdumps, pCLConf, mrender_template, mcollect_hosts):
         make_dashboard()
-        mdumps.assert_called_once_with(mrender_template.return_value)
+        mdumps.assert_called_once_with(mrender_template.return_value, indent=4)
 
     def test_render_dashboard_template_called(
             self, mprint, mdumps, pCLConf, mrender_template,
             mcollect_hosts):
         make_dashboard()
-        mrender_template.assert_called_once_with(mcollect_hosts.return_value)
+        mrender_template.assert_called_once_with(*mcollect_hosts.return_value)
 
     def test_collect_hosts_called(
             self, mprint, mdumps, pCLConf, mrender_template,
@@ -133,3 +141,34 @@ class RenderDashboardTemplateTestCase(unittest.TestCase):
                         self.assertNotIn("{hostname}", target_str)
                         self.assertIn(host, target_str)
                         
+
+
+class CollectHostsTestCase(unittest.TestCase):
+    @patch("fructosa.grafana.dashboard.configparser.ConfigParser")
+    def test_returns_list_of_hosts_from_file_name(self, pConfigParser):
+        expected = 'moN', 8, None, "3"
+        twisted_mock = MagicMock()
+        twisted_mock.keys.return_value = iter(expected)
+        conf_mock = MagicMock()
+        def hosts_section(item):
+            if item == "hosts":
+                return twisted_mock
+        conf_mock.__getitem__.side_effect = hosts_section
+        pConfigParser.return_value = conf_mock
+        hosts = _collect_hosts("my_test_file.conf")
+        self.assertEqual(hosts, expected)
+
+    @patch("fructosa.grafana.dashboard.configparser.ConfigParser")
+    def test_config_file_read_before_getting_values(self, pConfigParser):
+        conf = MagicMock()
+        conf.__getitem__.side_effect = ControlError
+        pConfigParser.return_value = conf
+        with self.assertRaises(ControlError):
+            hosts = _collect_hosts("telesforo")
+        conf.read.assert_called_once_with("telesforo")
+
+    def test_accepts_hosts_file_without_values(self):
+        with patch(
+                "configparser.open", mock_open(read_data=CONF_DATA1)) as mopen:
+            hosts = _collect_hosts("telesforo")
+        
