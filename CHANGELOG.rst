@@ -7,6 +7,7 @@ What changes are included in each version
 
 (WIP)
 
+* Added executable ``make-fructosa-dashboard`` to generate Grafana dashboards.
 * Documuentation improved
 
   * roadmap

@@ -50,7 +50,7 @@ The package provides several programs:
   file.
 * ``perad``: another service/daemon that analyzes the data and classifies it according to
   the performance  **Warning: TBD!**
-
+* ``make-fructosa-dashboard``: to generate Grafana dashboards.
 
 **FrUCToSA** is developed in Python at the CSC_ (Goethe Universitaet Frankfurt) under the
 GPL3 license.
