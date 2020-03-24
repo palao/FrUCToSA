@@ -153,7 +153,7 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         #  Wonderful! Tux is delighted with FrUCToSA! He is eager to use it in the
         # cluster!
 
-    def test_missing_hosts_file(self):
+    def test_missing_hosts_in_hosts_file(self):
         # Out of curiosity. What happens if there is no "hostsfile"?
         with make_fructosa_dashboard(self.missing_hosts_file) as result:
             err = result.stderr.decode()
