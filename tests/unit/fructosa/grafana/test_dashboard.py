@@ -22,10 +22,11 @@
 #######################################################################
 
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch, MagicMock, mock_open, call
 
 from fructosa.grafana.dashboard import (
-    make_dashboard, _render_dashboard_template, _collect_hosts
+    make_dashboard, _render_dashboard_template, _collect_hosts,
+    _write_dashboard,
 )
 from fructosa.constants import (
     MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP,
@@ -48,10 +49,10 @@ class ControlError(Exception):
 @patch("fructosa.grafana.dashboard._render_dashboard_template")
 @patch("fructosa.grafana.dashboard.CLConf")
 @patch("fructosa.grafana.dashboard.json.dumps")
-@patch("fructosa.grafana.dashboard.print")
+@patch("fructosa.grafana.dashboard._write_dashboard")
 class MakeDashboardTestCase(unittest.TestCase):
     def test_creates_CLConf_object(
-            self, mprint, mdumps, pCLConf, mrender_template, mcollect_hosts):
+            self, mwrite, mdumps, pCLConf, mrender_template, mcollect_hosts):
         expected_args = (
             (
                 "hosts",
@@ -82,44 +83,58 @@ class MakeDashboardTestCase(unittest.TestCase):
         )
 
     def test_print_out_result(
-            self, mprint, mdumps, pCLConf, mrender_template, mcollect_hosts):
+            self, mwrite, mdumps, pCLConf, mrender_template, mcollect_hosts):
+        hosts = ["t", None, 0, "-----"]
+        jsons = ["a", "v", "z", "D"]
+        mcollect_hosts.return_value = hosts
+        mdumps.side_effect = jsons
         make_dashboard()
-        mprint.assert_called_once_with(mdumps.return_value)
+        expected_calls = [call(_, h) for _,h in zip(jsons, hosts)]
+        mwrite.assert_has_calls(expected_calls, any_order=True)
 
     def test_json_created_from_rendered_template(
-            self, mprint, mdumps, pCLConf, mrender_template, mcollect_hosts):
+            self, mwrite, mdumps, pCLConf, mrender_template, mcollect_hosts):
+        hosts = [334, "a"]
+        jsons = ["aa", "xx"]
+        mcollect_hosts.return_value = hosts
+        mrender_template.side_effect = jsons
         make_dashboard()
-        mdumps.assert_called_once_with(mrender_template.return_value, indent=4)
+        mdumps.assert_has_calls([call(j, indent=4) for j in jsons])
 
     def test_render_dashboard_template_called(
-            self, mprint, mdumps, pCLConf, mrender_template,
+            self, mwrite, mdumps, pCLConf, mrender_template,
             mcollect_hosts):
+        hosts = ["winni", "peg", "glez"]
+        mcollect_hosts.return_value = hosts
         make_dashboard()
-        mrender_template.assert_called_once_with(*mcollect_hosts.return_value)
+        mrender_template.assert_has_calls([call(h) for h in hosts], any_order=True)
 
     def test_collect_hosts_called(
-            self, mprint, mdumps, pCLConf, mrender_template,
+            self, mwrite, mdumps, pCLConf, mrender_template,
             mcollect_hosts):
         make_dashboard()
         mcollect_hosts.assert_called_once_with(pCLConf.return_value[HOSTS_FILE_STR])
 
 
 class RenderDashboardTemplateTestCase(unittest.TestCase):
-    def test_hosts_included_in_dashboard_tags(self):
-        hosts = ("mylittle host",)
-        dashboard = _render_dashboard_template(*hosts)
-        for host in hosts:
-            self.assertIn(host, dashboard["tags"])
+    def test_host_included_in_dashboard_tags(self):
+        host = "mylittle host"
+        dashboard = _render_dashboard_template(host)
+        self.assertIn(host, dashboard["tags"])
                               
+    def test_hostname_rendered_in_dashboard_title(self):
+        host = "myhost"
+        dashboard = _render_dashboard_template(host)
+        self.assertIn(host, dashboard["title"])
+        
     def test_returns_dashboard_with_one_host_if_one_argument(self):
         dashboard = _render_dashboard_template("mylittle host")
         one_dashboard_num_panels = len(node_panels_template)
         self.assertEqual(len(dashboard["panels"]), one_dashboard_num_panels)
 
     def test_panels_have_host_name_with_one_host(self):
-        hosts = ("mylittle host",)
-        dashboard = _render_dashboard_template(*hosts)
-        host = hosts[0]
+        host = "mylittle host"
+        dashboard = _render_dashboard_template(host)
         for panel in dashboard["panels"]:
             try:
                 description = panel["description"]
@@ -172,3 +187,14 @@ class CollectHostsTestCase(unittest.TestCase):
                 "configparser.open", mock_open(read_data=CONF_DATA1)) as mopen:
             hosts = _collect_hosts("telesforo")
         
+
+class WriteDashboardTestCase(unittest.TestCase):
+    def test_saves_file_with_contents(self):
+        m = mock_open()
+        host = "mocodepavo"
+        contents = "myfu\n\nycontents"
+        with patch('fructosa.grafana.dashboard.open', m):
+            _write_dashboard(contents, host)
+        m.assert_called_once_with(host+".json", "w")
+        handle = m()
+        handle.write.assert_called_once_with(contents)

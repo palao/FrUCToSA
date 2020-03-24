@@ -52,12 +52,11 @@ def _collect_hosts(file_name):
     return tuple(conf[HOSTS_FILE_STR].keys())
 
 
-def _render_dashboard_template(*hosts):
-    """It takes an iterable with hosts and produces a dictionary
-    defining a dashboard"""
+def _render_dashboard_template(host):
+    """It produces a dictionary defining a dashboard from an input host"""
     dashboard = copy.deepcopy(node_template_dict)
-    for host in hosts:
-        dashboard["tags"].append(host)
+    dashboard["tags"].append(host)
+    dashboard["title"] = dashboard["title"].format(hostname=host)
     dashboard["panels"] = copy.deepcopy(node_panels_template)
     for panel in dashboard["panels"]:
         try:
@@ -76,12 +75,20 @@ def _render_dashboard_template(*hosts):
     return dashboard
 
 
+def _write_dashboard(dashboard, filename_prefix):
+    """Writes down the (implicitly) expected json serialized object
+    to file with name 'filename_prefix.json'"""
+    with open(filename_prefix+".json", "w") as f:
+        f.write(dashboard)
+
+
 def make_dashboard():
     conf = CLConf(
         description=MAKE_DASHBOARD_DESCRIPTION,
         arguments=(HOSTS_FILE_ARG, HOSTS_SECTION_ARG)
     )
     hosts = _collect_hosts(conf[HOSTS_FILE_STR])
-    dashboard_dict = _render_dashboard_template(*hosts)
-    dashboard_json = json.dumps(dashboard_dict, indent=4)
-    print(dashboard_json)
+    for host in hosts:
+        dashboard_dict = _render_dashboard_template(host)
+        dashboard_json = json.dumps(dashboard_dict, indent=4)
+        _write_dashboard(dashboard_json, host)
