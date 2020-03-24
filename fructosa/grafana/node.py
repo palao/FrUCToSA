@@ -43,7 +43,6 @@ node_template_dict = {
     "editable": True,
     "gnetId": None,
     "graphTooltip": 0,
-    "id": 2,
     "links": [],
     "panels": [],
     "refresh": "10s",
@@ -69,8 +68,7 @@ node_template_dict = {
     },
     "timezone": "",
     "title": "aoneapower",
-    "uid": "unXAjo5Wk",
-    "version": 38,
+    "version": 0,
 }
 
 node_panels_template = [
