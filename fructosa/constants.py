@@ -23,6 +23,7 @@
 
 import logging
 
+PROJECT_NAME = "FrUCToSA"
 PROTO_STARTING_PROGRAM_MSG = "Starting {program}..."
 PROTO_STOPPED_PROGRAM_MSG = "{program} stopped"
 PROTO_CANT_STOP_MSG = "{program} could not be stopped"
@@ -126,13 +127,15 @@ WRONG_MESSAGE_TO_GRAPHITE_DETAIL_MSG = "[sensor={sensor}] measurement={measureme
 
 MAKE_DASHBOARD_PROGRAM = "make-fructosa-dashboard"
 MAKE_DASHBOARD_DESCRIPTION = (
-    "utility to create Grafana dashboards to visualize data from FrUCToSA"
+    f"utility to create Grafana dashboards to visualize data from {PROJECT_NAME}"
 )
 HOSTS_FILE_STR = "hosts"
 HOSTS_FILE_METAVAR = HOSTS_FILE_STR.upper()
 MAKE_DASHBOARD_HOSTS_HELP = (
-    "{uphosts} file in ini format (with section '[{hosts}]' "
-    "and inside that section, one hostname per line".format(
+    "{uphosts} file in ini format with section '[{hosts}]'; "
+    "inside that section there must be one hostname per line. The result will "
+    "be a list of files in the working directory with names of the "
+    "form: 'hostname.json'".format(
         uphosts=HOSTS_FILE_METAVAR, hosts=HOSTS_FILE_STR
     )
 )

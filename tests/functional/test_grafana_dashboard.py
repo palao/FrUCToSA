@@ -32,8 +32,7 @@ from .utils import run_program, normalize_whitespaces
 from fructosa.constants import (
     MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR, MAKE_DASHBOARD_HOSTS_HELP,
     HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION,
-    HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP,
-    
+    HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP, PROJECT_NAME    
 )
 
 
@@ -57,7 +56,20 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         for h in self.multi_hosts:
             multi_hosts_contents += f"{h}\n"
         tmpdir.join(self.multi_hosts_file).write(multi_hosts_contents)
-        
+
+    def check_one_grafana_dashboard(self, hostname, hostsfile):
+        with make_fructosa_dashboard(hostsfile) as result:
+            with open("{}.json".format(hostname)) as f:
+                result = f.read()
+            normal_out = normalize_whitespaces(result)
+            # Is it valid json? Let us try to validate it:
+            result_dict = json.loads(normal_out)
+            # Fine. Now, does it have the expected contents=
+            self.assertEqual(result_dict["title"], hostname)
+            tags = result_dict["tags"]
+            self.assertIn(PROJECT_NAME, tags)
+            self.assertIn(hostname, tags)
+
     def test_executable_to_create_json_grafana_dashboards(self):
         uphosts = HOSTS_FILE_METAVAR
         hosts_help = MAKE_DASHBOARD_HOSTS_HELP
@@ -92,19 +104,15 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
             )
         #  Fine, so he prepares a hosts file with only one file and creates
         # a dashboard from it:
-        with make_fructosa_dashboard(self.one_host_file) as result:
-            normal_out = normalize_whitespaces(result.stdout.decode())
-            self.assertIn(self.one_host_name, normal_out)
-            # it looks good. Is it valid json? Let us try to validate it:
-            json.loads(normal_out)
+        self.check_one_grafana_dashboard(
+            hostname=self.one_host_name,
+            hostsfile=self.one_host_file
+        )
         # Now he can import the created dashboard in Grafana and use it!
         #  ...but actually he is interested in having a dashboard with multiple
         # hosts. He he goes to test this:
-        with make_fructosa_dashboard(self.multi_hosts_file) as result:
-            normal_out = normalize_whitespaces(result.stdout.decode())
-            for host in self.multi_hosts:
-                self.assertIn(host, normal_out)
-            # it looks good. Is it valid json? Let us try to validate it:
-            json.loads(normal_out)
-        
-            
+        for hostname in self.multi_hosts:
+            self.check_one_grafana_dashboard(
+                hostname=hostname,
+                hostsfile=self.multi_hosts_file,
+            )
