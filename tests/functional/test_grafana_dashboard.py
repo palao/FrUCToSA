@@ -32,7 +32,8 @@ from .utils import run_program, normalize_whitespaces
 from fructosa.constants import (
     MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR, MAKE_DASHBOARD_HOSTS_HELP,
     HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION,
-    HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP, PROJECT_NAME    
+    HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP, PROJECT_NAME,
+    MAKE_DASHBOARD_FILE_ERROR_MSG, MAKE_DASHBOARD_MISSING_SECTION_MSG, 
 )
 
 
@@ -56,9 +57,31 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         for h in self.multi_hosts:
             multi_hosts_contents += f"{h}\n"
         tmpdir.join(self.multi_hosts_file).write(multi_hosts_contents)
-
-    def check_one_grafana_dashboard(self, hostname, hostsfile):
-        with make_fructosa_dashboard(hostsfile) as result:
+        # One host, different section:
+        self.another_host_file = "another_host"
+        self.another_host_name = "yahost"
+        self.another_hosts_section = "all"
+        another_host_contents = (
+            f"[{self.another_hosts_section}]\n{self.another_host_name}\n"
+        )
+        tmpdir.join(self.another_host_file).write(another_host_contents)
+        # Missing file:
+        self.missing_hosts_file = "no_hosts_file"
+        # Missing section:
+        self.missing_section_hosts_file = "no_section_hosts_file"
+        tmpdir.join(self.missing_section_hosts_file).write("\n")
+        # Empty section:
+        self.empty_section_hosts_file = "empty_section_hosts_file"
+        tmpdir.join(self.empty_section_hosts_file).write("[hosts]\n")
+        # Malformed file:
+        self.malformed_hosts_file = "malformed_hosts_file"
+        tmpdir.join(self.malformed_hosts_file).write("include *-text\n")
+        
+    def check_one_grafana_dashboard(self, hostname, hostsfile, section=None):
+        args = (hostsfile,)
+        if section:
+            args = args + ("-s", section)
+        with make_fructosa_dashboard(*args) as result:
             with open("{}.json".format(hostname)) as f:
                 result = f.read()
             normal_out = normalize_whitespaces(result)
@@ -116,3 +139,50 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
                 hostname=hostname,
                 hostsfile=self.multi_hosts_file,
             )
+        # Tux believes firmly in the DRY principle. He allready has a hosts file with
+        # a list of hosts, BUT they are under the section "all".
+        # ...
+        # After looking at the output of help above, he understands that the section
+        # where the hosts can be found is customizable. Great!
+        # He tests it:
+        self.check_one_grafana_dashboard(
+            hostname=self.another_host_name,
+            hostsfile=self.another_host_file,
+            section=self.another_hosts_section,
+        )
+        #  Wonderful! Tux is delighted with FrUCToSA! He is eager to use it in the
+        # cluster!
+
+    def test_missing_hosts_file(self):
+        # Out of curiosity. What happens if there is no "hostsfile"?
+        with make_fructosa_dashboard(self.missing_hosts_file) as result:
+            err = result.stderr.decode()
+            expected_err = MAKE_DASHBOARD_FILE_ERROR_MSG.format(
+                hosts_file=self.missing_hosts_file
+            )
+            self.assertEqual(err, expected_err)
+        # or if the file does not contain the proper section?
+        with make_fructosa_dashboard(self.missing_hosts_file) as result:
+            err = result.stderr.decode()
+            expected_err = MAKE_DASHBOARD_MISSING_SECTION_MSG.format(
+                hosts_file=self.missing_hosts_file,
+                hosts_section=HOSTS_FILE_STR,
+            )
+            self.assertEqual(err, expected_err)
+        # or if the section is empty?
+        with make_fructosa_dashboard(self.missing_hosts_file) as result:
+            err = result.stderr.decode()
+            expected_err = MAKE_DASHBOARD_MISSING_HOSTS_MSG.format(
+                hosts_file=self.missing_hosts_file,
+                hosts_section=HOSTS_FILE_STR,
+            )
+            self.assertEqual(err, expected_err)
+        # or a malformed file is given?
+        with make_fructosa_dashboard(self.malformed_hosts_file) as result:
+            err = result.stderr.decode()
+            expected_err = MAKE_DASHBOARD_MISSING_HOSTS_MSG.format(
+                hosts_file=self.missing_hosts_file,
+                hosts_section=HOSTS_FILE_STR,
+            )
+            self.assertEqual(err, expected_err)
+        # This software is reasonably well behaved! Tux is really happy.
