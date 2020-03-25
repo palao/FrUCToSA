@@ -31,12 +31,19 @@ class CannotLog(Exception):
     pass
 
 
+class FructosaError(Exception):
+    pass
+
+
 def handle_errors(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except CannotLog as e:
+        except KeyError as e:
+            print(e.args[0], file=sys.stderr)
+            raise SystemExit(START_STOP_ERROR)
+        except Exception as e:
             print(str(e), file=sys.stderr)
             raise SystemExit(START_STOP_ERROR)
     return wrapper

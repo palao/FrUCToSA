@@ -27,10 +27,13 @@ import configparser
 
 from ..ui.cl import CLConf
 from .node import node_template_dict, node_panels_template
+from ..error_handling import handle_errors, FructosaError
+
 from ..constants import (
     MAKE_DASHBOARD_DESCRIPTION, MAKE_DASHBOARD_HOSTS_HELP, HOSTS_FILE_STR,
     HOSTS_FILE_METAVAR, HOSTS_SECTION_STR, HOSTS_SECTION_SHORT_OPTION,
     HOSTS_SECTION_LONG_OPTION, HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP,
+    MAKE_DASHBOARD_FILE_ERROR_MSG,
 )
 
 
@@ -87,12 +90,20 @@ def _write_dashboard(dashboard, filename_prefix):
         f.write(dashboard)
 
 
+@handle_errors
 def make_dashboard():
     conf = CLConf(
         description=MAKE_DASHBOARD_DESCRIPTION,
         arguments=(HOSTS_FILE_ARG, HOSTS_SECTION_ARG)
     )
-    hosts = _collect_hosts(conf[HOSTS_FILE_STR], conf[HOSTS_SECTION_STR])
+    try:
+        hosts = _collect_hosts(conf[HOSTS_FILE_STR], conf[HOSTS_SECTION_STR])
+    except KeyError as e:
+        msg = MAKE_DASHBOARD_FILE_ERROR_MSG.format(
+            hosts_file=conf[HOSTS_FILE_STR],
+            hosts_section=conf[HOSTS_SECTION_STR]
+        )
+        raise FructosaError(msg)
     for host in hosts:
         dashboard_dict = _render_dashboard_template(host)
         dashboard_json = json.dumps(dashboard_dict, indent=4)

@@ -33,7 +33,7 @@ from fructosa.constants import (
     MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR, MAKE_DASHBOARD_HOSTS_HELP,
     HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION, HOSTS_FILE_STR,
     HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP, PROJECT_NAME,
-    MAKE_DASHBOARD_FILE_ERROR_MSG, MAKE_DASHBOARD_MISSING_SECTION_MSG, 
+    MAKE_DASHBOARD_FILE_ERROR_MSG, 
 )
 
 
@@ -70,12 +70,13 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         # Missing section:
         self.missing_section_hosts_file = "no_section_hosts_file"
         tmpdir.join(self.missing_section_hosts_file).write("\n")
-        # Empty section:
-        self.empty_section_hosts_file = "empty_section_hosts_file"
-        tmpdir.join(self.empty_section_hosts_file).write("[hosts]\n")
+        # # Empty section:
+        # self.empty_section_hosts_file = "empty_section_hosts_file"
+        # tmpdir.join(self.empty_section_hosts_file).write("[hosts]\n")
         # Malformed file:
         self.malformed_hosts_file = "malformed_hosts_file"
-        tmpdir.join(self.malformed_hosts_file).write("include *-text\n")
+        self.malformed_contents = "include *-text\n"
+        tmpdir.join(self.malformed_hosts_file).write(self.malformed_contents)
         
     def check_one_grafana_dashboard(self, hostname, hostsfile, section=None):
         args = (hostsfile,)
@@ -156,34 +157,35 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
     def test_missing_hosts_in_hosts_file(self):
         # Out of curiosity. What happens if there is no "hostsfile"?
         with make_fructosa_dashboard(self.missing_hosts_file) as result:
-            err = result.stderr.decode()
+            err = result.stderr.decode().strip()
             expected_err = MAKE_DASHBOARD_FILE_ERROR_MSG.format(
-                hosts_file=self.missing_hosts_file
+                hosts_file=self.missing_hosts_file,
+                hosts_section=HOSTS_FILE_STR,
             )
             self.assertEqual(err, expected_err)
         # or if the file does not contain the proper section?
-        with make_fructosa_dashboard(self.missing_hosts_file) as result:
-            err = result.stderr.decode()
-            expected_err = MAKE_DASHBOARD_MISSING_SECTION_MSG.format(
-                hosts_file=self.missing_hosts_file,
+        with make_fructosa_dashboard(self.missing_section_hosts_file) as result:
+            err = result.stderr.decode().strip()
+            expected_err = MAKE_DASHBOARD_FILE_ERROR_MSG.format(
+                hosts_file=self.missing_section_hosts_file,
                 hosts_section=HOSTS_FILE_STR,
             )
             self.assertEqual(err, expected_err)
-        # or if the section is empty?
-        with make_fructosa_dashboard(self.missing_hosts_file) as result:
-            err = result.stderr.decode()
-            expected_err = MAKE_DASHBOARD_MISSING_HOSTS_MSG.format(
-                hosts_file=self.missing_hosts_file,
-                hosts_section=HOSTS_FILE_STR,
-            )
-            self.assertEqual(err, expected_err)
+        # # or if the section is empty?
+        # with make_fructosa_dashboard(self.missing_section_hosts_file) as result:
+        #     err = result.stderr.decode()
+        #     expected_err = MAKE_DASHBOARD_MISSING_HOSTS_MSG.format(
+        #         hosts_file=self.missing_section_hosts_file,
+        #         hosts_section=HOSTS_FILE_STR,
+        #     )
+        #     self.assertEqual(err, expected_err)
         # or a malformed file is given?
         with make_fructosa_dashboard(self.malformed_hosts_file) as result:
-            err = result.stderr.decode()
-            expected_err = MAKE_DASHBOARD_MISSING_HOSTS_MSG.format(
-                hosts_file=self.missing_hosts_file,
-                hosts_section=HOSTS_FILE_STR,
-            )
+            err = result.stderr.decode().strip()
+            expected_err = (
+                "File contains no section headers.\nfile: '{}', line: 1\n"
+                "{}"
+            ).format(self.malformed_hosts_file, repr(self.malformed_contents))
             self.assertEqual(err, expected_err)
         #  Interesting! This software seems reasonably well behaved!
         # That is important for Tux: it is a sign of quality to his eyes.

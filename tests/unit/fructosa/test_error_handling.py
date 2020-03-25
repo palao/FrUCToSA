@@ -25,7 +25,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import sys
-from fructosa.error_handling import CannotLog, handle_errors
+from fructosa.error_handling import CannotLog, FructosaError, handle_errors
 from fructosa.constants import START_STOP_ERROR
 
 
@@ -33,6 +33,12 @@ class CannotLogTestCase(unittest.TestCase):
     def test_is_exception(self):
         with self.assertRaises(CannotLog):
             raise CannotLog()
+
+
+class FructosaErrorTestCase(unittest.TestCase):
+    def test_is_exception(self):
+        with self.assertRaises(FructosaError):
+            raise FructosaError()
 
         
 class handle_errorsTestCase(unittest.TestCase):
@@ -54,16 +60,19 @@ class handle_errorsTestCase(unittest.TestCase):
         self.assertEqual(result, returned)
 
     @patch("fructosa.error_handling.print")
-    def test_behaviour_on_PermissionError(self, pprint):
-        msg = "bla bla"
-        ex = CannotLog(msg)
-        self.mock_f.side_effect=ex
-        decorated_f = handle_errors(self.mock_f)
-        with self.assertRaises(SystemExit) as e:
-            decorated_f()
-        print(e.exception.code)
-        self.assertEqual(e.exception.code, START_STOP_ERROR)
-        pprint.assert_called_once_with(msg, file=sys.stderr)
+    def test_behaviour_with_different_errors(self, pprint):
+        msgs = ["bla bla", "blo", "bli", "fol"]
+        ex_classes = [FructosaError, KeyError, FileNotFoundError, CannotLog]
+        for ex_class, msg in zip(ex_classes, msgs):
+            ex = ex_class(msg)
+            with self.subTest(ex=ex, msg=msg):
+                self.mock_f.side_effect=ex
+                decorated_f = handle_errors(self.mock_f)
+                with self.assertRaises(SystemExit) as e:
+                    decorated_f()
+                self.assertEqual(e.exception.code, START_STOP_ERROR)
+                pprint.assert_called_once_with(msg, file=sys.stderr)
+                pprint.reset_mock()
 
     def test_function_metadada_preserved(self):
         self.mock_f.__doc__ = "shf"

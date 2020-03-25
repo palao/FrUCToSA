@@ -23,6 +23,7 @@
 
 import unittest
 from unittest.mock import patch, MagicMock, mock_open, call
+import sys
 
 from fructosa.grafana.dashboard import (
     make_dashboard, _render_dashboard_template, _collect_hosts,
@@ -33,6 +34,7 @@ from fructosa.constants import (
     HOSTS_FILE_STR, HOSTS_FILE_METAVAR,
     HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION,
     HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP, HOSTS_SECTION_STR,
+    MAKE_DASHBOARD_FILE_ERROR_MSG, START_STOP_ERROR
 )
 from fructosa.grafana.node import node_template_dict, node_panels_template
 
@@ -118,6 +120,34 @@ class MakeDashboardTestCase(unittest.TestCase):
             pCLConf.return_value[HOSTS_FILE_STR],
             pCLConf.return_value[HOSTS_SECTION_STR],
         )
+
+    def test_exceptions_converted_to_SystemExit(
+            self, mwrite, mdumps, pCLConf, mrender_template,
+            mcollect_hosts):
+        mcollect_hosts.side_effect = Exception("empty message")
+        with self.assertRaises(SystemExit):
+            make_dashboard()
+
+    def test_handling_KeyError_in_collect_hosts(
+            self, mwrite, mdumps, pCLConf, mrender_template,
+            mcollect_hosts):
+        hosts_file = "majadaonda"
+        mcollect_hosts.side_effect = KeyError(hosts_file)
+        def getitem(item):
+            if item == HOSTS_FILE_STR:
+                return hosts_file
+            elif item == HOSTS_SECTION_STR:
+                return HOSTS_FILE_STR
+        pCLConf.return_value.__getitem__.side_effect = getitem
+        with self.assertRaises(SystemExit) as ex:
+            with patch("fructosa.error_handling.print") as pprint:
+                make_dashboard()
+        msg = MAKE_DASHBOARD_FILE_ERROR_MSG.format(
+            hosts_file=hosts_file,
+            hosts_section=HOSTS_FILE_STR
+        )
+        pprint.assert_called_once_with(msg, file=sys.stderr)
+        self.assertEqual(ex.exception.code, START_STOP_ERROR)
 
 
 class RenderDashboardTemplateTestCase(unittest.TestCase):

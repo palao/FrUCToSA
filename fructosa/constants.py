@@ -152,16 +152,14 @@ HOSTS_SECTION_HELP = (
 )
 
 MAKE_DASHBOARD_FILE_ERROR_MSG = (
-    "The input file ('{hosts_file}') cannot be opened"
-)
-MAKE_DASHBOARD_MISSING_SECTION_MSG = (
-    "The input file ('{hosts_file}') does not contain the needed section "
+    "The input file ('{hosts_file}') cannot be opened or it misses the section "
     "('{hosts_section}')"
 )
-MAKE_DASHBOARD_MISSING_HOSTS_MSG = (
-    "The input file ('{hosts_file}') does not contain host names in "
-    "section '{hosts_section}'"
-)
-MAKE_DASHBOARD_MALFORMED_FILE_ERROR_MSG = (
-    "The input file ('{hosts_file}') seems to be malformed"
-)
+
+# MAKE_DASHBOARD_MISSING_HOSTS_MSG = (
+#     "The input file ('{hosts_file}') does not contain host names in "
+#     "section '{hosts_section}'"
+# )
+# MAKE_DASHBOARD_MALFORMED_FILE_ERROR_MSG = (
+#     "The input file ('{hosts_file}') seems to be malformed"
+# )
