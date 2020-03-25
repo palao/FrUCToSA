@@ -185,4 +185,5 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
                 hosts_section=HOSTS_FILE_STR,
             )
             self.assertEqual(err, expected_err)
-        # This software is reasonably well behaved! Tux is really happy.
+        #  Interesting! This software seems reasonably well behaved!
+        # That is important for Tux: it is a sign of quality to his eyes.

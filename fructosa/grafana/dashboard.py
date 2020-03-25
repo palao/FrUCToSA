@@ -42,14 +42,19 @@ HOSTS_FILE_ARG = (
 HOSTS_SECTION_ARG = (
     HOSTS_SECTION_STR,
     ((HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION),
-         dict(help=HOSTS_SECTION_HELP, metavar=HOSTS_SECTION_METAVAR))
+         dict(
+             help=HOSTS_SECTION_HELP,
+             metavar=HOSTS_SECTION_METAVAR,
+             default=HOSTS_FILE_STR
+        )
+    )
 )
 
 
-def _collect_hosts(file_name):
+def _collect_hosts(file_name, section):
     conf = configparser.ConfigParser(allow_no_value=True)
     conf.read(file_name)
-    return tuple(conf[HOSTS_FILE_STR].keys())
+    return tuple(conf[section].keys())
 
 
 def _render_dashboard_template(host):
@@ -87,7 +92,7 @@ def make_dashboard():
         description=MAKE_DASHBOARD_DESCRIPTION,
         arguments=(HOSTS_FILE_ARG, HOSTS_SECTION_ARG)
     )
-    hosts = _collect_hosts(conf[HOSTS_FILE_STR])
+    hosts = _collect_hosts(conf[HOSTS_FILE_STR], conf[HOSTS_SECTION_STR])
     for host in hosts:
         dashboard_dict = _render_dashboard_template(host)
         dashboard_json = json.dumps(dashboard_dict, indent=4)
