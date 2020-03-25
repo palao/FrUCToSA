@@ -31,7 +31,7 @@ from .utils import run_program, normalize_whitespaces
 
 from fructosa.constants import (
     MAKE_DASHBOARD_PROGRAM, HOSTS_FILE_METAVAR, MAKE_DASHBOARD_HOSTS_HELP,
-    HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION,
+    HOSTS_SECTION_SHORT_OPTION, HOSTS_SECTION_LONG_OPTION, HOSTS_FILE_STR,
     HOSTS_SECTION_METAVAR, HOSTS_SECTION_HELP, PROJECT_NAME,
     MAKE_DASHBOARD_FILE_ERROR_MSG, MAKE_DASHBOARD_MISSING_SECTION_MSG, 
 )
@@ -99,7 +99,7 @@ class CreationOfGrafanaDashboardsTestCase(unittest.TestCase):
         short_section = HOSTS_SECTION_SHORT_OPTION
         long_section = HOSTS_SECTION_LONG_OPTION
         section_meta = HOSTS_SECTION_METAVAR
-        section_help = HOSTS_SECTION_HELP
+        section_help = HOSTS_SECTION_HELP % {"default": HOSTS_FILE_STR}
         #  After starting the FrUCToSA system, Tux would like to connect
         # it to Grafana. He finds out that there is an executable shipped
         # with the package that can create a dashboard importable by

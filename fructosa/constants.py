@@ -131,21 +131,24 @@ MAKE_DASHBOARD_DESCRIPTION = (
 )
 HOSTS_FILE_STR = "hosts"
 HOSTS_FILE_METAVAR = HOSTS_FILE_STR.upper()
-MAKE_DASHBOARD_HOSTS_HELP = (
-    "{uphosts} file in ini format with section '[{hosts}]'; "
-    "inside that section there must be one hostname per line. The result will "
-    "be a list of files in the working directory with names of the "
-    "form: 'hostname.json'".format(
-        uphosts=HOSTS_FILE_METAVAR, hosts=HOSTS_FILE_STR
-    )
-)
-
 HOSTS_SECTION_STR = "section"
 HOSTS_SECTION_SHORT_OPTION = "-s"
 HOSTS_SECTION_LONG_OPTION = f"--{HOSTS_SECTION_STR}"
 HOSTS_SECTION_METAVAR = HOSTS_SECTION_STR.upper()
+MAKE_DASHBOARD_HOSTS_HELP = (
+    "{uphosts} file in ini format with a section '[{hosts}]' in it; "
+    "inside that section there must be one hostname per line. The result will "
+    "be a list of files in the working directory with names of the "
+    "form: 'hostname.json'. The name of the section can be changed (see "
+    "help on '{section_opt}' option)".format(
+        uphosts=HOSTS_FILE_METAVAR, hosts=HOSTS_FILE_STR,
+        section_opt=HOSTS_SECTION_SHORT_OPTION,
+    )
+)
+
 HOSTS_SECTION_HELP = (
-    "section in the file where the hosts can be found, one hostname per line"
+    "section in the file where the hosts can be found, one hostname per line "
+    "(default: '%(default)s')"
 )
 
 MAKE_DASHBOARD_FILE_ERROR_MSG = (
