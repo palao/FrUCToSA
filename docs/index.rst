@@ -10,13 +10,16 @@ Welcome to FrUCToSA's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   README
    usage/deployment
+   usage/dashboards
 
    development/index
    development/requirements
    development/roadmap
    development/architecture
 
+   CHANGELOG
 
 Indices and tables
 ==================
