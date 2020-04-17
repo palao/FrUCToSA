@@ -131,6 +131,7 @@ class MakeDashboardTestCase(unittest.TestCase):
     def test_handling_KeyError_in_collect_hosts(
             self, mwrite, mdumps, pCLConf, mrender_template,
             mcollect_hosts):
+        self.fail("rewrite it using .__wrapped__")
         hosts_file = "majadaonda"
         mcollect_hosts.side_effect = KeyError(hosts_file)
         def getitem(item):

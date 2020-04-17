@@ -20,10 +20,10 @@ cache:
 
 before_script:
   - python -V  # Print out python version for debugging
-  - pip install -U pip
   - python -m venv venv
   - source venv/bin/activate
-  - pip install requirements/devel.text
+  - pip install --upgrade pip
+  - pip install -r requirements/devel.text
 
 test:
   script:
