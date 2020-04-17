@@ -26,7 +26,7 @@ import unittest
 from unittest.mock import patch, MagicMock, call, mock_open, PropertyMock
 from inspect import signature, Parameter
 
-from tests.unit.fructosa.aio_tools import asyncio_run, AsyncioMock
+from .aio_tools import asyncio_run, AsyncioMock
 
 import fructosa.lmaster
 from fructosa.lmessage import UnsuitableLMessage, WrongPickleMessage

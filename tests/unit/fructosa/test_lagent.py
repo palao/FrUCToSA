@@ -26,7 +26,7 @@ from unittest.mock import patch, MagicMock, call, mock_open, PropertyMock
 from inspect import signature, Parameter
 import logging
 
-from tests.unit.fructosa.aio_tools import asyncio_run, AsyncioMock
+from .aio_tools import asyncio_run, AsyncioMock
 
 import fructosa.lagent
 from fructosa.constants import (

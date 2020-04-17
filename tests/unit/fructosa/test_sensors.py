@@ -29,7 +29,7 @@ from fructosa.constants import (
     OWN_LOG_FILE_KEY, OWN_LOG_LEVEL_KEY,
 )
 
-from tests.unit.fructosa.aio_tools import asyncio_run, AsyncioMock
+from .aio_tools import asyncio_run, AsyncioMock
 
 class InventedException(Exception):
     pass
