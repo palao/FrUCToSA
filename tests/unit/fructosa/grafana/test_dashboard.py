@@ -37,6 +37,7 @@ from fructosa.constants import (
     MAKE_DASHBOARD_FILE_ERROR_MSG, START_STOP_ERROR
 )
 from fructosa.grafana.node import node_template_dict, node_panels_template
+from fructosa.error_handling import FructosaError
 
 
 HOST1 = "mastodonte"
@@ -131,7 +132,7 @@ class MakeDashboardTestCase(unittest.TestCase):
     def test_handling_KeyError_in_collect_hosts(
             self, mwrite, mdumps, pCLConf, mrender_template,
             mcollect_hosts):
-        self.fail("rewrite it using .__wrapped__")
+        unwrapped_make_dashboard = make_dashboard.__wrapped__
         hosts_file = "majadaonda"
         mcollect_hosts.side_effect = KeyError(hosts_file)
         def getitem(item):
@@ -140,15 +141,13 @@ class MakeDashboardTestCase(unittest.TestCase):
             elif item == HOSTS_SECTION_STR:
                 return HOSTS_FILE_STR
         pCLConf.return_value.__getitem__.side_effect = getitem
-        with self.assertRaises(SystemExit) as ex:
-            with patch("fructosa.error_handling.print") as pprint:
-                make_dashboard()
         msg = MAKE_DASHBOARD_FILE_ERROR_MSG.format(
             hosts_file=hosts_file,
             hosts_section=HOSTS_FILE_STR
         )
-        pprint.assert_called_once_with(msg, file=sys.stderr)
-        self.assertEqual(ex.exception.code, START_STOP_ERROR)
+        with self.assertRaises(FructosaError) as cm:
+            unwrapped_make_dashboard()
+        self.assertEqual(str(cm.exception), msg)
 
 
 class RenderDashboardTemplateTestCase(unittest.TestCase):
