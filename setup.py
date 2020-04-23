@@ -20,25 +20,28 @@
 #
 #######################################################################
 
-from setuptools import setup, find_packages
-from os import path
+import os
 
-here = path.abspath(path.dirname(__file__))
+from setuptools import setup, find_packages
+
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 def get_requirements():
     """Find the required packages from a 'single source of truth' (tm)."""
-    req_file_name = path.join(here, "requirements", 'production.text')
+    req_file_name = os.path.join(here, "requirements", 'production.text')
     with open(req_file_name, encoding='utf-8') as f:
         reqs = [_.strip() for _ in f]
     return reqs
 
 
 setup(name="FrUCToSA",
-    use_scm_version={"version_scheme": "post-release"},
+    use_scm_version={"write_to": os.path.join("fructosa", "version.py")},
+    #use_scm_version={"version_scheme": "post-release"},
     setup_requires=['setuptools_scm'],
     description="A package to collect and analyze basic performance data from clusters",
     long_description=long_description,

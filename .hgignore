@@ -43,3 +43,5 @@ MANIFEST
 .eggs/**
 .tox/**
 .pytest_cache/**
+
+fructosa/version.py

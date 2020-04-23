@@ -26,9 +26,9 @@ import psutil
 import time
 import os
 
-from tests.functional.base_start_stop import BaseStartStop
-from tests.common.program import FrUCToSADWrapper
-from tests.common.logs import LogParser
+from .base_start_stop import BaseStartStop
+from ..common.program import FrUCToSADWrapper
+from ..common.logs import LogParser
 #from fructosa.constants import FRUCTOSAD_PROCESS_NAME#, FRUCTOSAD_LOCK_FILE_NAME
 from fructosa.conf import FRUCTOSAD_DEFAULT_PIDFILE
 from fructosa.fructosad import FRUCTOSAD_STARTING_MESSAGE, FRUCTOSAD_STOP_MESSAGE
