@@ -10,7 +10,16 @@ HOWTO release a version
 1. Ensure that the tests pass: ``tox``
 2. Update ``CHANGELOG.rst`` and ``docs/development/roadmap.rst``
 3. Update ``README.rst`` if needed
-4. Make a tag: ``hg tag ...``
+4. Update version::
+
+     $ bump2version <type>
+
+   where ``<type>`` is ``major``, ``minor`` or ``patch``.
+   
+   OLD:
+     before, using scm_version, it used to be like follows
+
+     Make a tag: ``hg tag ...``
 5. Make a source distribution and a wheel::
 
      $ python setup.py sdist bdist_wheel
