@@ -24,6 +24,7 @@
 
 import tempfile
 import os
+import platform
 import shutil
 import socket
 
@@ -59,7 +60,7 @@ services:""".format(local_project_path=FRUCTOSA_PROJECT_LOCAL_PATH)
 PROTO_DOCKER_COMPOSE_SERVICE = """
   {service_name}:
     container_name: {container_name}
-    image: fructosa
+    image: fructosa{python_version_tag}
     hostname: {hostname}
     command: bash -c "pip install {pip_user_flag} -e /FrUCToSA && {user_path}{command} && tail -F {logfiles}"
     volumes:
@@ -67,7 +68,7 @@ PROTO_DOCKER_COMPOSE_SERVICE = """
       {pid_dir_volume}
       {conf_volume}
 """
-
+#command: bash -c "pip wheel -w /tmp /FrUCToSA && pip install {pip_user_flag} /tmp/FrUCToSA*whl && {user_path}{command} && tail -F {logfiles}"
 DOCKER_COMPOSE_VOLUME_LINE = """      {{logs_volume{}}}
 """
 
@@ -93,6 +94,8 @@ DOCKER_COMPOSE_GRAPHITE_SERVICE = """
 
 DOCKER_COMPOSE_SERVICE_USER = "    user: {user}\n"
 DOCKER_COMPOSE_VOLUME = "- {local_path}:{container_path}"
+
+PYTHON_VERSION_TAG = ":py"+"".join(platform.python_version_tuple()[:2])
 
 
 class FTEnvironment:
@@ -332,6 +335,7 @@ class DockerFTEnvironmentType(FTEnvironmentType):
                 user_path = USER_PATH
             compose_service_dict = dict(
                 service_name=service, container_name=container, hostname=hostname,
+                python_version_tag=PYTHON_VERSION_TAG,
                 command=" ".join(command.full_command_line()),
                 logfiles=" ".join(env.original_log_file_names),
                 conf_volume=conf_volume,

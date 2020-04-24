@@ -53,15 +53,15 @@ This behaviour can be controlled with an environment varaible called ``FRUCTOSA_
 How to run the Functional Tests (FTs)
 -------------------------------------
 
-In ``devel`` there is a dockerfile that can be used to create the image needed to run
-the FTs inside containers::
+In ``devel`` there are some dockerfiles that can be used to create the images
+needed to run the FTs inside containers. For instance::
 
   $ cd devel/
-  $ docker build --tag fructosa:auto --tag fructosa:latest -f FrUCToSA-dev.df .
+  $ docker build --tag fructosa-py37:auto --tag fructosa-py37:latest -f FrUCToSA-dev-py37.df .
 
 With that, the FTs should run smothly (hopefully!) with::
 
-  $ pytest tests/functional/
+  (python-3.7) $ pytest tests/functional/
 
 Or with::
 

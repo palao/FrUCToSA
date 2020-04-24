@@ -1,0 +1,5 @@
+FROM python:3.7
+MAINTAINER "david.palao@gmail.com"
+RUN pip install psutil
+RUN touch /tmp/fructosa.log
+RUN useradd testuser -m -u 1000 -s /bin/bash
