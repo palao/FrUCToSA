@@ -6,3 +6,4 @@ docker-compose
 twine
 wheel
 tox
+bump2version

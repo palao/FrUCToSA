@@ -39,11 +39,13 @@ def get_requirements():
     return reqs
 
 
-setup(name="FrUCToSA",
-    use_scm_version={"write_to": os.path.join("fructosa", "version.py")},
+setup(
+    name="FrUCToSA",
+    version="0.2.0",
+    #use_scm_version={"write_to": os.path.join("fructosa", "version.py")},
     #use_scm_version={"version_scheme": "post-release"},
     #version="0.2.1",
-    setup_requires=['setuptools_scm'],
+    #setup_requires=['setuptools_scm'],
     description="A package to collect and analyze basic performance data from clusters",
     long_description=long_description,
     author="David Palao",
