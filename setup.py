@@ -41,7 +41,7 @@ def get_requirements():
 
 setup(
     name="FrUCToSA",
-    version="0.2.0",
+    version="version='0.2.1'",
     #use_scm_version={"write_to": os.path.join("fructosa", "version.py")},
     #use_scm_version={"version_scheme": "post-release"},
     #version="0.2.1",
