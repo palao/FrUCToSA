@@ -31,12 +31,14 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-def get_requirements():
-    """Find the required packages from a 'single source of truth' (tm)."""
-    req_file_name = os.path.join(here, "requirements", 'production.text')
-    with open(req_file_name, encoding='utf-8') as f:
-        reqs = [_.strip() for _ in f]
-    return reqs
+# def get_requirements():
+#     """Find the required packages from a 'single source of truth' (tm)."""
+#     req_file_name = os.path.join(here, "requirements", 'production.text')
+#     with open(req_file_name, encoding='utf-8') as f:
+#         reqs = [_.strip() for _ in f]
+#     return reqs
+
+install_requirements = ["psutil"]
 
 
 setup(
@@ -54,7 +56,7 @@ setup(
     license='GNU General Public License (GPLv3)',
     packages=find_packages(),
     provides=["fructosa"],
-    install_requires=get_requirements(),
+    install_requires=install_requirements,
     platforms=['GNU/Linux'],
     entry_points={'console_scripts': [
         "fructosad = fructosa.fructosad:main",
