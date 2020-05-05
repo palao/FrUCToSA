@@ -22,11 +22,16 @@ The procedure to create and use the dashboards, is as follows:
 	...
 
    b. Make that directory and the directory where the providers go, if they do
-      not exist yet::
+      not exist yet:
+	
+      .. code-block:: console
 
-	# mkdir -p /etc/grafana/provisioning/dashboards
+	 # mkdir -p /etc/grafana/provisioning/dashboards
 
-   c. Create a provider. For instance::
+	 
+   c. Create a provider. For instance:
+
+      .. code-block:: yaml
 
 	# cat /etc/grafana/provisioning/dashboards/fructosa.yml
 	apiVersion: 1
@@ -54,14 +59,18 @@ The procedure to create and use the dashboards, is as follows:
 	    # <string, required> path to dashboard files on disk. Required
 	    path: /var/lib/grafana/dashboards
 
-   d. Create this path, where the dashboards will be stored::
+   d. Create this path, where the dashboards will be stored:
 
+      .. code-block:: console
+		      
 	# mkdir /var/lib/grafana/dashboards
 
 5. Make the dashboards to visualize data from FrUCTosa using Grafana:
 
-   a. Prepare a file with host names in it. For instance::
+   a. Prepare a file with host names in it. For instance:
 
+      .. code-block:: console
+		      
 	$ cat fructosa-dashboards.ini
 	[hosts]
 	host1
@@ -69,14 +78,19 @@ The procedure to create and use the dashboards, is as follows:
 	host3
 
    b. Use ``make-fructosa-dashboard`` to produce a json file with a dashboard
-      for each host ::
+      for each host:
+
+      .. code-block:: console
 
 	$ make-fructosa-dashboard fructosa-dashboards.ini
 
-   c. Copy the produced json files to the proper location::
+   c. Copy the produced json files to the proper location:
+
+      .. code-block:: console
 
 	# cp host1.json host2.json host3.json /var/lib/grafana/dashboards
 
+	
 6. Launch Graphite, FrUCToSA and Grafana
 7. Connect to the Grafana site and, enjoy!
 	

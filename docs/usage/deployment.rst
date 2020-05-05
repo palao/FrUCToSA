@@ -1,23 +1,31 @@
-HOW to deploy FrUCToSA
-----------------------
+HOW to deploy
+-------------
 
-1. Prepare config files ``qagent.conf`` and ``qmaster.conf``
+To deploy |project| in a cluster:
+
+1. Prepare config files ``lagent.conf`` and ``lmaster.conf``
 2. Prepare a host file for Ansible
-3. Install Python. If using a Redhat-like system, it can be done with
-   ::
+3. Install Python. If using a Redhat-like system, it can be done with:
+
+   .. code-block:: console
+
       $ ansible-playbook -e restricted_hosts=only-two provisioning-on-nodes.yml
    
-4. Deploy QULo:
-   ::
+4. Deploy |project|:
+
+   .. code-block:: console
+
       $ ansible-playbook install.yml
       
-5. Start ``qmaster``
-   ::
+5. Start ``lmaster``:
 
-      $ ansible-plabook start-qmaster.yml
+   .. code-block:: console
+		   
+      $ ansible-plabook start-lmaster.yml
 
-6. Start ``qagent``
-   ::
+6. Start ``lagent``:
 
-      $ ansible-plabook start-qagent.yml
+   .. code-block:: console
+
+      $ ansible-plabook start-lagent.yml
 
