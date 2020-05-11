@@ -227,5 +227,14 @@ TODO
     3. stop grafana (?)
     4. stop graphite
 
+  * *restart*
+  * ``/etc/conf.d/fructosa`` with info about *what* to do.
+  * ``/etc/fructosa/fructosa.conf`` with info about *how* to do.
 
-       
+* Grafana node dashboard:
+
+  * why data from some nodes does not arrive?
+  * set different default times (length and refres)
+  * active job number
+  * table of processes with highest load
+    

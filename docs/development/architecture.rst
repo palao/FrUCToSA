@@ -1,11 +1,10 @@
-########################
+************************
 Architecture of FrUCToSA
-########################
+************************
 
 
-************
 Introduction
-************
+============
 
 ``FrUCToSA`` has several components, as described in the ``README``:
 
@@ -23,5 +22,19 @@ Introduction
 
    
 ``fructosad``
-=============
+-------------
+
+.. note::
+   TBD: as of today (v0.2.1) ``fructosad`` does nothing.
+
+   
+LiMon
+-----
+
+``lagent``
+``lmaster``
+
+
+Heartbeat system
+----------------
 
