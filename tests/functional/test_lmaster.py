@@ -38,6 +38,7 @@ from fructosa.constants import (
     LMASTER_DESCRIPTION, CONF_READ_MSG, LMASTER_DEFAULT_CONFIGFILE,
     LAGENT_DEFAULT_CONFIGFILE, PROTO_SENSOR_STARTED_MSG, LMASTER_DEFAULT_CONFIGFILE,
     PROTO_MEASUREMENT_RECEIVED_MSG, PROTO_INVALID_SENSOR_MSG,
+    HEARTBEAT_MSG_TEMPLATE,
 )
 from fructosa.lmaster import LMASTER_STARTING_MESSAGE, LMASTER_STOP_MESSAGE
 from fructosa.conf import LMASTER_DEFAULT_PIDFILE, LAGENT_DEFAULT_PIDFILE
@@ -58,7 +59,48 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
         self.program_default_configfile = LMASTER_DEFAULT_CONFIGFILE
         super().setUp()
 
-    def test_lmaster_communicates_with_lagent(self):
+    def test_lmaster_receives_heartbeats_from_lagent(self):
+        #  Tux has wants to check that lmaster and lagent can communicate.
+        # So, he prepares configurations files for lmaster and lagent:
+        lagent = LAgentWrapper(pidfile=LAGENT_DEFAULT_PIDFILE)
+        if self.ft_env.name == LOCALHOST_FT_ENVIRONMENT:
+            lagent_config_file_name = "lagent-test.0.conf"
+            lmaster_config_file_name = "lmaster.0.conf"
+        elif self.ft_env.name == DOCKER_FT_ENVIRONMENT:
+            lagent_config_file_name = "lagent-test.0.docker.conf"
+            lmaster_config_file_name = "lmaster.0.docker.conf"
+        lagent_conf = self.prepare_config_from_file(
+            lagent_config_file_name,
+            default_configfile=LAGENT_DEFAULT_CONFIGFILE,
+            program=lagent,
+        )
+        #self.prepare_sensors(lagent_conf)
+        lmaster_conf = self.prepare_config_from_file(lmaster_config_file_name)
+        heartbeat_received = HEARTBEAT_MSG_TEMPLATE.format(
+            host="quaco", message_number=0,
+        )
+        self.setup_logparser(target_strings=(heartbeat_received,))
+        old_lines = self.tmplogparser.get_new_lines()
+        #and he launches lmaster and lagent:
+        self.program.args = ("start",)
+        lagent.args = ("start",)
+        programs = (self.program, lagent)
+        with self.ft_env(*programs) as start_lmaster_lagent:
+            # Immediately he sees that the first heartbeat signal has arrived 
+            # and is reported in the logs:
+            self.wait_for_environment()
+            new_lines = self.tmplogparser.get_new_lines()
+            self.assertTrue(len(new_lines) > 0)
+            for line in new_lines:
+                values = [k in line for k in self.sensors]
+                self.assertTrue(reduce(lambda x,y: x or y, values))
+                self.assertIn("INFO", line)
+                self.assertIn("LMaster", line)
+        # This was very satisfying!
+        # He stops lagent:
+    # and lmaster:
+    
+    def test_lmaster_receives_data_from_lagent(self):
         #  Tux has wants to check that lmaster and lagent can communicate.
         # So, he prepares configurations files for lmaster and lagent:
         lagent = LAgentWrapper(pidfile=LAGENT_DEFAULT_PIDFILE)
@@ -88,12 +130,6 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
             wait_t = 10*max([float(v["frequency"]) for k,v in self.sensors.items()])
             self.wait_for_environment(wait_t)
             new_lines = self.tmplogparser.get_new_lines()
-            print(
-                "file:", self.ft_env.log_file_name,
-                "old lines:", old_lines,
-                "new lines:", new_lines,
-                sep="\n  "
-            )
             self.assertTrue(len(new_lines) > 0)
             for line in new_lines:
                 values = [k in line for k in self.sensors]
