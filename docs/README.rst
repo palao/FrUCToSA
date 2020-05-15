@@ -238,3 +238,5 @@ TODO
   * active job number
   * table of processes with highest load
     
+* LAgent should be able to change frequency of measurements depending on the situation
+  of the node

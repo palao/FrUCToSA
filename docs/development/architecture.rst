@@ -36,5 +36,26 @@ LiMon
 
 
 Heartbeat system
-----------------
+^^^^^^^^^^^^^^^^
+
+There are two communication mechanisms between ``lagent`` and ``lmaster``:
+
+*heartbeat*
+  ``lagent`` sends regularly heartbeats to ``lmaster`` (UDP)
+
+  The heartbeats can be seen in the logs.
+  
+*ping-pong*
+  ``lagent`` answers to a direct request from ``lmaster`` (TCP)
+
+  The *ping-pong* mechanism is triggered from command line
+  .. console::
+
+     # lmaster --ping-pong
+     nodex          [ok]
+     nodey          [FAIL]
+     ...
+
+As of version 0.3.0 only the basic *heartbeat* mechanism is implemented.
+
 

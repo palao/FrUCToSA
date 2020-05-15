@@ -20,6 +20,7 @@ HOWTO release a version
      before, using scm_version, it used to be like follows
 
      Make a tag: ``hg tag ...``
+     
 5. Make a source distribution and a wheel::
 
      $ python setup.py sdist bdist_wheel
