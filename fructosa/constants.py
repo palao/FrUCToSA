@@ -42,11 +42,18 @@ LAGENT_DEFAULT_CONFIGFILE = "/etc/fructosa/lagent.conf"
 LMASTER_DEFAULT_CONFIGFILE = "/etc/fructosa/lmaster.conf"
 
 LAGENT_PROGRAM = "lagent"
-LAGENT_DESCRIPTION = """fructosa agent is a daemon program that measures performance data in the host computer
-and transfers that data to the fructosa master program"""
-
 LMASTER_PROGRAM = "lmaster"
-LMASTER_DESCRIPTION = "fructosa master program"
+LAGENT_DESCRIPTION = (
+    f"{LAGENT_PROGRAM} stands for LiMon agent. It is a daemon program that "
+    "measures performance data in the host computer and transfers them "
+    f"to the {LMASTER_PROGRAM} program."
+)
+
+LMASTER_DESCRIPTION = (
+    f"{LMASTER_PROGRAM} stands for LiMon master program. It is a daemon "
+    "program that orchestrates the lagents."
+)
+
 SERVING_PROTO_MESSAGE = "Serving on {}"
 INITIAL_LMASTER_SERVER_PACKET_SIZE = 8192
 
