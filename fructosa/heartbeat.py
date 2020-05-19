@@ -21,10 +21,24 @@
 #
 #######################################################################
 
+from fructosa.logs import setup_logging
+
 
 class HeartbeatClientProtocol:
-    def __init__(self, message, on_con_lost):
-        self.message = message
+    def __init__(self, on_con_lost, logging_conf):
+        self._counter = 0 # must be a class attribute
         self.on_con_lost = on_con_lost
         self.transport = None
-        
+        self.logger = setup_logging(
+            self.__class__.__name__,
+            rotatingfile_conf=logging_conf
+        )
+
+    @property # 
+    def message(self): # 
+        return self._counter.to_bytes(length=64, byteorder="big", signed=False) # 
+    
+    def connection_made(self, transport):
+        self.transport = transport
+        self.transport.sendto(self.message)
+        self.logger.info("caca")

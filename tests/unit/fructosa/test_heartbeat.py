@@ -22,7 +22,7 @@
 #######################################################################
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from fructosa.heartbeat import HeartbeatClientProtocol
 
@@ -30,16 +30,27 @@ from fructosa.heartbeat import HeartbeatClientProtocol
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def setUp(self):
         self.on_con_lost = "funny future"
-        self.msg = MagicMock()
-        self.proto = HeartbeatClientProtocol(self.msg, self.on_con_lost)
-        
-    def test_intance_creation(self):
-        self.assertEqual(self.proto.message, self.msg)
+        self.logging_conf = MagicMock()
+        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
+            self.proto = HeartbeatClientProtocol(
+                self.on_con_lost, self.logging_conf
+            )
+        self.psetup_logging = psetup_logging
+
+    def test_intance_creation_sets_needed_attributes(self):
+        self.assertEqual(self.proto._counter, 0)
         self.assertEqual(self.proto.on_con_lost, self.on_con_lost)
         self.assertIs(self.proto.transport, None)
+        self.assertEqual(self.proto.logger, self.psetup_logging.return_value)
 
+    def test_instance_init_sets_up_logging_properly(self):
+        self.psetup_logging.assert_called_once_with(
+            self.proto.__class__.__name__, rotatingfile_conf=self.logging_conf
+        )
+        
     def test_connection_made(self):
         transport = MagicMock()
-        self.connection_made(transport)
+        self.proto.connection_made(transport)
         self.assertEqual(self.proto.transport, transport)
-        transport.sendto.assert_called_once_with(self.proto.msg.encode())
+        transport.sendto.assert_called_once_with(self.proto.message)
+        self.proto.logger.info.assert_called_once_with("caca")
