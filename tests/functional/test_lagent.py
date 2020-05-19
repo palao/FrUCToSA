@@ -32,14 +32,17 @@ import glob
 
 from tests.common.program import LAgentWrapper
 from tests.functional.base_start_stop import BaseStartStop
-from tests.functional.environment import LOCALHOST_FT_ENVIRONMENT, DOCKER_FT_ENVIRONMENT
+from tests.functional.environment import (
+    LOCALHOST_FT_ENVIRONMENT, DOCKER_FT_ENVIRONMENT,
+)
 
 from fructosa.constants import (
     LAGENT_DESCRIPTION, CONF_READ_MSG, LAGENT_DEFAULT_CONFIGFILE,
     PROTO_SENSOR_STARTED_MSG, LAGENT_DEFAULT_CONFIGFILE, PROTO_MEASUREMENT_MSG,
     PROTO_INVALID_SENSOR_MSG, LMASTER_PROGRAM, LMASTER_HOST, LMASTER_HOST_KEY,
     LAGENT_TO_LMASTER_DATA_PORT, LAGENT_TO_LMASTER_DATA_PORT_KEY,
-    LAGENT_TO_LMASTER_CONNECTING_MSG, HEARTBEAT_SEND_MSG_TEMPLATE, 
+    LAGENT_TO_LMASTER_CONNECTING_MSG, HEARTBEAT_SEND_MSG_TEMPLATE,
+    HEARTBEAT_PORT,
 )
 from fructosa.lagent import LAGENT_STARTING_MESSAGE, LAGENT_STOP_MESSAGE
 from fructosa.conf import LAGENT_DEFAULT_PIDFILE
@@ -283,29 +286,40 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         conf = self.prepare_config_from_file(conf_file)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
         port_data = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
-        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
+        hb_port = HEARTBEAT_PORT
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, port_data, hb_port
+        )
         # ...but wait, wait. He wonders what happens if there is no lmaster section
         conf_file = "lagent-test.empty.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = LMASTER_HOST
         port_data = LAGENT_TO_LMASTER_DATA_PORT
-        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, port_data, hb_port
+        )
         # ...or if the section is empty
         conf_file = "lagent-test.5.conf"
         conf = self.prepare_config_from_file(conf_file)
-        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, port_data, hb_port
+        )
         # ...or it has only one key (the host)
         conf_file = "lagent-test.6.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
         port_data = LAGENT_TO_LMASTER_DATA_PORT
-        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, port_data, hb_port
+        )
         # ...or only the port is given
         conf_file = "lagent-test.7.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = LMASTER_HOST
         port_data = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
-        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, port_data, hb_port
+        )
         # He has to admit that the program seems to be passing all the checks and looks
         # it is ready for production!
 
