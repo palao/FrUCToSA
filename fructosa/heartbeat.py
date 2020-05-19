@@ -23,4 +23,8 @@
 
 
 class HeartbeatClientProtocol:
-    pass
+    def __init__(self, message, on_con_lost):
+        self.message = message
+        self.on_con_lost = on_con_lost
+        self.transport = None
+        

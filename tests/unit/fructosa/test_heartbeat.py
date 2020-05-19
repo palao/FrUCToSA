@@ -22,12 +22,24 @@
 #######################################################################
 
 import unittest
+from unittest.mock import MagicMock
 
 from fructosa.heartbeat import HeartbeatClientProtocol
 
 
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
+    def setUp(self):
+        self.on_con_lost = "funny future"
+        self.msg = MagicMock()
+        self.proto = HeartbeatClientProtocol(self.msg, self.on_con_lost)
+        
     def test_intance_creation(self):
-        proto = HeartbeatClientProtocol("some")
-        self.assertEqual(proto.message, "some")
-        self.assertIs(proto.transport, None)
+        self.assertEqual(self.proto.message, self.msg)
+        self.assertEqual(self.proto.on_con_lost, self.on_con_lost)
+        self.assertIs(self.proto.transport, None)
+
+    def test_connection_made(self):
+        transport = MagicMock()
+        self.connection_made(transport)
+        self.assertEqual(self.proto.transport, transport)
+        transport.sendto.assert_called_once_with(self.proto.msg.encode())
