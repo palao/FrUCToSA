@@ -85,7 +85,10 @@ CONF_READ_MSG = "Global conf read from file {config_file}"
 GENERIC_CONNECTED_MSG = " ...connection established"
 
 HEARTBEAT_PORT = 37788
-HEARTBEAT_MSG_TEMPLATE = "[host={host}][hb#{message_number:06d}]"
+HEARTBEAT_RECEIVE_MSG_TEMPLATE = "[host={host}][hb#{message_number:06d}]"
+HEARTBEAT_SEND_MSG_TEMPLATE = (
+    "[hb#{message_number:06d}] sent to master ({master}:{hb_port})"
+)
 
 # Logging:
 LOGGER_LEVEL = logging.DEBUG

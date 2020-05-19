@@ -39,7 +39,7 @@ from fructosa.constants import (
     PROTO_SENSOR_STARTED_MSG, LAGENT_DEFAULT_CONFIGFILE, PROTO_MEASUREMENT_MSG,
     PROTO_INVALID_SENSOR_MSG, LMASTER_PROGRAM, LMASTER_HOST, LMASTER_HOST_KEY,
     LAGENT_TO_LMASTER_DATA_PORT, LAGENT_TO_LMASTER_DATA_PORT_KEY,
-    LAGENT_TO_LMASTER_CONNECTING_MSG,
+    LAGENT_TO_LMASTER_CONNECTING_MSG, HEARTBEAT_SEND_MSG_TEMPLATE, 
 )
 from fructosa.lagent import LAGENT_STARTING_MESSAGE, LAGENT_STOP_MESSAGE
 from fructosa.conf import LAGENT_DEFAULT_PIDFILE
@@ -237,12 +237,18 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             "lagent-test.2.conf"
         )
 
-    def _test_lmaster_section_of_config_file(self, conf_file, host, port):
+    def _test_lmaster_section_of_config_file(
+            self, conf_file, host, port_data, port_hb):
+        hb_msg_0 = HEARTBEAT_SEND_MSG_TEMPLATE.format(
+            message_number=0,
+            master=host,
+            hb_port=port_hb,
+        )
         trying_to_connect_msg = LAGENT_TO_LMASTER_CONNECTING_MSG.format(
             host_key=LMASTER_HOST_KEY, host=host,
-            port_key=LAGENT_TO_LMASTER_DATA_PORT_KEY, port=port,
+            port_key=LAGENT_TO_LMASTER_DATA_PORT_KEY, port=port_data,
         )
-        self.setup_logparser(target_strings=(trying_to_connect_msg,))
+        self.setup_logparser(target_strings=(trying_to_connect_msg, hb_msg_0))
         old_lines_summary = self.tmplogparser._line_counting_history[-1]
         # and, he launches lagent:
         self.program.args = ("start",)
@@ -251,12 +257,18 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             self.wait_for_environment(1)
             new_lines = self.tmplogparser.get_new_lines()
             new_lines_summary = self.tmplogparser._line_counting_history[-1]
-            # He finds in the logs a message claiming that the connection is established
-            # with lmaster
+            #  He finds in the logs a message claiming that the program is trying to
+            # connect with lmaster:
             self.assertEqual(
                 old_lines_summary[1][trying_to_connect_msg]+1,
                 new_lines_summary[1][trying_to_connect_msg]
             )
+            # He also finds that in any case the program tries to send
+            # heartbeat data to lmaster
+            self.assertEqual(
+                old_lines_summary[1][hb_msg_0]+1,
+                new_lines_summary[1][hb_msg_0]
+            )            
             # so he stops lagent with satisfaction.
 
     def test_keys_in_lmaster_section_are_read_and_reported(self):
@@ -270,30 +282,30 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         conf_file = "lagent-test.4.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
-        port = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
-        self._test_lmaster_section_of_config_file(conf_file, host, port)
+        port_data = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
+        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
         # ...but wait, wait. He wonders what happens if there is no lmaster section
         conf_file = "lagent-test.empty.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = LMASTER_HOST
-        port = LAGENT_TO_LMASTER_DATA_PORT
-        #self._test_lmaster_section_of_config_file(conf_file, host, port)
+        port_data = LAGENT_TO_LMASTER_DATA_PORT
+        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
         # ...or if the section is empty
         conf_file = "lagent-test.5.conf"
         conf = self.prepare_config_from_file(conf_file)
-        self._test_lmaster_section_of_config_file(conf_file, host, port)
+        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
         # ...or it has only one key (the host)
         conf_file = "lagent-test.6.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
-        port = LAGENT_TO_LMASTER_DATA_PORT
-        self._test_lmaster_section_of_config_file(conf_file, host, port)
+        port_data = LAGENT_TO_LMASTER_DATA_PORT
+        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
         # ...or only the port is given
         conf_file = "lagent-test.7.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = LMASTER_HOST
-        port = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
-        self._test_lmaster_section_of_config_file(conf_file, host, port)
+        port_data = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
+        self._test_lmaster_section_of_config_file(conf_file, host, port_data)
         # He has to admit that the program seems to be passing all the checks and looks
         # it is ready for production!
 

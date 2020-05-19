@@ -38,7 +38,7 @@ from fructosa.constants import (
     LMASTER_DESCRIPTION, CONF_READ_MSG, LMASTER_DEFAULT_CONFIGFILE,
     LAGENT_DEFAULT_CONFIGFILE, PROTO_SENSOR_STARTED_MSG, LMASTER_DEFAULT_CONFIGFILE,
     PROTO_MEASUREMENT_RECEIVED_MSG, PROTO_INVALID_SENSOR_MSG,
-    HEARTBEAT_MSG_TEMPLATE,
+    HEARTBEAT_RECEIVE_MSG_TEMPLATE,
 )
 from fructosa.lmaster import LMASTER_STARTING_MESSAGE, LMASTER_STOP_MESSAGE
 from fructosa.conf import LMASTER_DEFAULT_PIDFILE, LAGENT_DEFAULT_PIDFILE
@@ -76,7 +76,7 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
         )
         #self.prepare_sensors(lagent_conf)
         lmaster_conf = self.prepare_config_from_file(lmaster_config_file_name)
-        heartbeat_received = HEARTBEAT_MSG_TEMPLATE.format(
+        heartbeat_received = HEARTBEAT_RECEIVE_MSG_TEMPLATE.format(
             host="quaco", message_number=0,
         )
         self.setup_logparser(target_strings=(heartbeat_received,))
