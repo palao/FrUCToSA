@@ -38,11 +38,18 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
         self.psetup_logging = psetup_logging
 
     def test_intance_creation_sets_needed_attributes(self):
-        self.assertEqual(self.proto._counter, 0)
+        self.assertEqual(self.proto.beat_number, 0)
         self.assertEqual(self.proto.on_con_lost, self.on_con_lost)
         self.assertIs(self.proto.transport, None)
         self.assertEqual(self.proto.logger, self.psetup_logging.return_value)
 
+    def test_another_instance_increases_beat_number(self):
+        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
+            another_proto = HeartbeatClientProtocol(
+                self.on_con_lost, self.logging_conf
+            )
+        self.assertEqual(another_proto.beat_number, 1)
+        
     def test_instance_init_sets_up_logging_properly(self):
         self.psetup_logging.assert_called_once_with(
             self.proto.__class__.__name__, rotatingfile_conf=self.logging_conf
