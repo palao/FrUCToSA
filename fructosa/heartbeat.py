@@ -58,7 +58,9 @@ class HeartbeatClientProtocol:
         self.transport = transport
         self.transport.sendto(self.message)
         self.__class__._next_beat_number += 1
-        self.logger.info("caca")
+        log_msg = HEARTBEAT_SEND_MSG_TEMPLATE.format(
+            message_number=self.beat_number)
+        self.logger.info(log_msg)
         self.transport.close()
 
     def connection_lost(self, exc):

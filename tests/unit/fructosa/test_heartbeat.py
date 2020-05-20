@@ -29,7 +29,9 @@ from fructosa.heartbeat import (
     encode_beat_number, decode_beat_number,
 )
 
-from fructosa.constants import HEARTBEAT_RECEIVE_MSG_TEMPLATE
+from fructosa.constants import (
+    HEARTBEAT_RECEIVE_MSG_TEMPLATE, HEARTBEAT_SEND_MSG_TEMPLATE,
+)
 
 
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
@@ -86,7 +88,9 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
         self.proto.connection_made(transport)
         self.assertEqual(self.proto.transport, transport)
         transport.sendto.assert_called_once_with(msg)
-        self.proto.logger.info.assert_called_once_with("caca")
+        expected_msg = HEARTBEAT_SEND_MSG_TEMPLATE.format(
+            message_number=self.proto.beat_number)
+        self.proto.logger.info.assert_called_once_with(expected_msg)
         self.proto.transport.close.assert_called_once_with()
         
     def test_message(self):
