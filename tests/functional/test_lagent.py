@@ -41,8 +41,8 @@ from fructosa.constants import (
     PROTO_SENSOR_STARTED_MSG, LAGENT_DEFAULT_CONFIGFILE, PROTO_MEASUREMENT_MSG,
     PROTO_INVALID_SENSOR_MSG, LMASTER_PROGRAM, LMASTER_HOST, LMASTER_HOST_KEY,
     LAGENT_TO_LMASTER_DATA_PORT, LAGENT_TO_LMASTER_DATA_PORT_KEY,
-    LAGENT_TO_LMASTER_CONNECTING_MSG, HEARTBEAT_SEND_MSG_TEMPLATE,
-    HEARTBEAT_PORT,
+    LAGENT_TO_LMASTER_CONNECTING_MSG, HEARTBEAT_START_SENDING_MSG_TEMPLATE,
+    HEARTBEAT_SEND_MSG_TEMPLATE, HEARTBEAT_PORT,
 )
 from fructosa.lagent import LAGENT_STARTING_MESSAGE, LAGENT_STOP_MESSAGE
 from fructosa.conf import LAGENT_DEFAULT_PIDFILE
@@ -242,16 +242,17 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
 
     def _test_lmaster_section_of_config_file(
             self, conf_file, host, port_data, port_hb):
-        hb_msg_0 = HEARTBEAT_SEND_MSG_TEMPLATE.format(
-            message_number=0,
+        hb_start = HEARTBEAT_START_SENDING_MSG_TEMPLATE.format(
             master=host,
-            hb_port=port_hb,
-        )
+            hb_port=port_hb)
+        hb_msg_0 = HEARTBEAT_SEND_MSG_TEMPLATE.format(message_number=0)
         trying_to_connect_msg = LAGENT_TO_LMASTER_CONNECTING_MSG.format(
             host_key=LMASTER_HOST_KEY, host=host,
             port_key=LAGENT_TO_LMASTER_DATA_PORT_KEY, port=port_data,
         )
-        self.setup_logparser(target_strings=(trying_to_connect_msg, hb_msg_0))
+        self.setup_logparser(
+            target_strings=(trying_to_connect_msg, hb_start, hb_msg_0)
+        )
         old_lines_summary = self.tmplogparser._line_counting_history[-1]
         # and, he launches lagent:
         self.program.args = ("start",)
@@ -266,12 +267,17 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
                 old_lines_summary[1][trying_to_connect_msg]+1,
                 new_lines_summary[1][trying_to_connect_msg]
             )
-            # He also finds that in any case the program tries to send
-            # heartbeat data to lmaster
+            #  He also finds that the program announces that heartbeat data
+            # to will be sent to lmaster
+            self.assertEqual(
+                old_lines_summary[1][hb_start]+1,
+                new_lines_summary[1][hb_start]
+            )
+            #  ...and the first message is indeed sent:
             self.assertEqual(
                 old_lines_summary[1][hb_msg_0]+1,
                 new_lines_summary[1][hb_msg_0]
-            )            
+            )
             # so he stops lagent with satisfaction.
 
     def test_keys_in_lmaster_section_are_read_and_reported(self):
