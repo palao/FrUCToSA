@@ -24,7 +24,12 @@
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from fructosa.heartbeat import HeartbeatClientProtocol, encode_beat_number
+from fructosa.heartbeat import (
+    HeartbeatClientProtocol, HeartbeatServerProtocol,
+    encode_beat_number, decode_beat_number,
+)
+
+from fructosa.constants import HEARTBEAT_RECEIVE_MSG_TEMPLATE
 
 
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
@@ -65,7 +70,9 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
                 self.on_con_lost, self.logging_conf
             )
         self.assertEqual(another_proto.beat_number, self.proto.beat_number)
-        
+
+    ######################################################################
+    # I'd like to have this test, but I think I need a FT to justify it:
     # def test_connection_made_increases_beat_number_even_if_error(self):
     #     mock_transport = Mock()
     #     class MyException(Exception): pass
@@ -90,7 +97,42 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
 
     def test_connection_lost(self):
         self.proto.connection_lost(Mock())
+
+
+class HeartbeatServerProtocolTestCase(unittest.TestCase):
+    def setUp(self):
+        self.logging_conf = MagicMock()
+        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
+            self.proto = HeartbeatServerProtocol(self.logging_conf)
+        self.psetup_logging = psetup_logging
+
+    def test_intance_creation_sets_needed_attributes(self):
+        self.assertEqual(self.proto.logger, self.psetup_logging.return_value)
+
+    def test_instance_init_sets_up_logging_properly(self):
+        self.psetup_logging.assert_called_once_with(
+            self.proto.__class__.__name__, rotatingfile_conf=self.logging_conf
+        )
         
+    def test_connection_made_sets_transport(self):
+        with self.assertRaises(AttributeError):
+            self.proto.transport
+        transport = Mock()
+        self.proto.connection_made(transport)
+        self.assertEqual(self.proto.transport, transport)
+
+    def test_datagram_received(self):
+        num = 2348
+        data = Mock()
+        addr = "remote-host"
+        expected_msg = HEARTBEAT_RECEIVE_MSG_TEMPLATE.format(
+            host=addr, message_number=num
+        )
+        with patch("fructosa.heartbeat.decode_beat_number") as pdecode:
+            pdecode.return_value = num
+            self.proto.datagram_received(data, addr)
+        pdecode.assert_called_once_with(data)
+        self.proto.logger.info.assert_called_once_with(expected_msg)
 
 class EncodeBeatNumberTestCase(unittest.TestCase):
     def test_result(self):
@@ -100,3 +142,13 @@ class EncodeBeatNumberTestCase(unittest.TestCase):
             length=64, byteorder="big", signed=False
         )
         self.assertEqual(result, raw_number.to_bytes.return_value)
+
+
+class DecodeBeatNumberTestCase(unittest.TestCase):
+    def test_result(self):
+        test_nums = [234, 44, 0, 132948]
+        for num in test_nums:
+            data = encode_beat_number(num)
+            with self.subTest(data=data, expected=num):
+                result = decode_beat_number(data)
+                self.assertEqual(result, num)

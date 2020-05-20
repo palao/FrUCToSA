@@ -23,9 +23,16 @@
 
 from fructosa.logs import setup_logging
 
+from fructosa.constants import (
+    HEARTBEAT_RECEIVE_MSG_TEMPLATE, HEARTBEAT_SEND_MSG_TEMPLATE,
+)
 
 def encode_beat_number(num):
     return num.to_bytes(length=64, byteorder="big", signed=False)
+
+
+def decode_beat_number(data):
+    return int.from_bytes(data,  byteorder="big", signed=False)
 
 
 class HeartbeatClientProtocol:
@@ -56,3 +63,22 @@ class HeartbeatClientProtocol:
 
     def connection_lost(self, exc):
         pass
+
+
+class HeartbeatServerProtocol:
+    def __init__(self, logging_conf):
+        self.logger = setup_logging(
+            self.__class__.__name__,
+            rotatingfile_conf=logging_conf
+        )
+    
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def datagram_received(self, data, addr):
+        num = decode_beat_number(data)
+        self.logger.info(
+            HEARTBEAT_RECEIVE_MSG_TEMPLATE.format(
+                host=addr, message_number=num
+            )
+        )
