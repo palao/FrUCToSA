@@ -64,7 +64,7 @@ class HeartbeatClientProtocol:
         self.transport.close()
 
     def connection_lost(self, exc):
-        pass
+        self.on_con_lost.set_result(True)
 
 
 class HeartbeatServerProtocol:

@@ -36,7 +36,7 @@ from fructosa.constants import (
 
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def setUp(self):
-        self.on_con_lost = "funny future"
+        self.on_con_lost = Mock()
         self.logging_conf = MagicMock()
         with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
             self.proto = HeartbeatClientProtocol(
@@ -47,7 +47,7 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def tearDown(self):
         HeartbeatClientProtocol._next_beat_number = 0
         
-    def test_intance_creation_sets_needed_attributes(self):
+    def test_intance_creation_defines_needed_attributes(self):
         self.assertEqual(self.proto.beat_number, 0)
         self.assertEqual(self.proto.on_con_lost, self.on_con_lost)
         self.assertIs(self.proto.transport, None)
@@ -101,6 +101,7 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
 
     def test_connection_lost(self):
         self.proto.connection_lost(Mock())
+        self.proto.on_con_lost.set_result.assert_called_once_with(True)
 
 
 class HeartbeatServerProtocolTestCase(unittest.TestCase):
