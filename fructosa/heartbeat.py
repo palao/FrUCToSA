@@ -35,16 +35,26 @@ def decode_beat_number(data):
     return int.from_bytes(data,  byteorder="big", signed=False)
 
 
+
+class HeartbeatProtocolFactory:
+    def __init__(self, protocol_class, logging_conf):
+        self.logger = setup_logging(
+            "Heartbeat",
+            rotatingfile_conf=logging_conf
+        )
+        self._protocol_class = protocol_class
+            
+    def __call__(self, *args):
+        return self._protocol_class(self.logger, *args)
+        
+        
 class HeartbeatClientProtocol:
     _next_beat_number = 0 #  should be a descriptor?
     
-    def __init__(self, on_con_lost, logging_conf):
+    def __init__(self, logger, on_con_lost):
         self.on_con_lost = on_con_lost
         self.transport = None
-        self.logger = setup_logging(
-            self.__class__.__name__,
-            rotatingfile_conf=logging_conf
-        )
+        self.logger = logger
         
     @property
     def beat_number(self):
@@ -57,10 +67,10 @@ class HeartbeatClientProtocol:
     def connection_made(self, transport):
         self.transport = transport
         self.transport.sendto(self.message)
-        self.__class__._next_beat_number += 1
         log_msg = HEARTBEAT_SEND_MSG_TEMPLATE.format(
             message_number=self.beat_number)
         self.logger.info(log_msg)
+        self.__class__._next_beat_number += 1
         self.transport.close()
 
     def connection_lost(self, exc):
@@ -68,11 +78,8 @@ class HeartbeatClientProtocol:
 
 
 class HeartbeatServerProtocol:
-    def __init__(self, logging_conf):
-        self.logger = setup_logging(
-            self.__class__.__name__,
-            rotatingfile_conf=logging_conf
-        )
+    def __init__(self, logger):
+        self.logger = logger
     
     def connection_made(self, transport):
         self.transport = transport

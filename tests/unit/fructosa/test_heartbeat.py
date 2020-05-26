@@ -25,6 +25,7 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 from fructosa.heartbeat import (
+    HeartbeatProtocolFactory,
     HeartbeatClientProtocol, HeartbeatServerProtocol,
     encode_beat_number, decode_beat_number,
 )
@@ -34,15 +35,38 @@ from fructosa.constants import (
 )
 
 
+class HeartbeatClientProtocolFactoryTestCase(unittest.TestCase):
+    def setUp(self):
+        self.protocol_class = Mock()
+        self.logging_conf = MagicMock()
+        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
+            self.factory = HeartbeatProtocolFactory(
+                self.protocol_class, self.logging_conf
+            )
+        self.psetup_logging = psetup_logging
+
+    def test_intance_creation_defines_needed_attributes(self):
+        self.assertEqual(self.factory._protocol_class, self.protocol_class)
+        self.assertEqual(self.factory.logger, self.psetup_logging.return_value)
+
+    def test_instance_init_sets_up_logging_properly(self):
+        self.psetup_logging.assert_called_once_with(
+            "Heartbeat", rotatingfile_conf=self.logging_conf
+        )
+
+    def test_instance_calls_return_protocol_instance(self):
+        args = ("x", 45, None)
+        proto = self.factory(*args)
+        self.assertEqual(proto, self.factory._protocol_class.return_value)
+        self.factory._protocol_class.assert_called_once_with(
+            self.factory.logger, *args)
+
+
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def setUp(self):
         self.on_con_lost = Mock()
-        self.logging_conf = MagicMock()
-        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
-            self.proto = HeartbeatClientProtocol(
-                self.on_con_lost, self.logging_conf
-            )
-        self.psetup_logging = psetup_logging
+        self.logger = MagicMock()
+        self.proto = HeartbeatClientProtocol(self.logger, self.on_con_lost)
 
     def tearDown(self):
         HeartbeatClientProtocol._next_beat_number = 0
@@ -51,13 +75,8 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
         self.assertEqual(self.proto.beat_number, 0)
         self.assertEqual(self.proto.on_con_lost, self.on_con_lost)
         self.assertIs(self.proto.transport, None)
-        self.assertEqual(self.proto.logger, self.psetup_logging.return_value)
+        self.assertEqual(self.proto.logger, self.logger)
 
-    def test_instance_init_sets_up_logging_properly(self):
-        self.psetup_logging.assert_called_once_with(
-            self.proto.__class__.__name__, rotatingfile_conf=self.logging_conf
-        )
-        
     def test_connection_made_increases_beat_number(self):
         mock_transport = Mock()
         self.proto.connection_made(mock_transport)
@@ -65,12 +84,9 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
         self.assertEqual(self.proto.beat_number, 2)
         
     def test_connection_made_from_another_instance_increases_beat_number(self):
-        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
-            mock_transport = Mock()
-            self.proto.connection_made(mock_transport)
-            another_proto = HeartbeatClientProtocol(
-                self.on_con_lost, self.logging_conf
-            )
+        mock_transport = Mock()
+        self.proto.connection_made(mock_transport)
+        another_proto = HeartbeatClientProtocol(self.logger, self.on_con_lost)
         self.assertEqual(another_proto.beat_number, self.proto.beat_number)
 
     ######################################################################
@@ -85,11 +101,12 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def test_connection_made(self):
         transport = MagicMock()
         msg = self.proto.message
+        expected_beat_number = self.proto.beat_number
         self.proto.connection_made(transport)
         self.assertEqual(self.proto.transport, transport)
         transport.sendto.assert_called_once_with(msg)
         expected_msg = HEARTBEAT_SEND_MSG_TEMPLATE.format(
-            message_number=self.proto.beat_number)
+            message_number=expected_beat_number)
         self.proto.logger.info.assert_called_once_with(expected_msg)
         self.proto.transport.close.assert_called_once_with()
         
@@ -106,19 +123,12 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
 
 class HeartbeatServerProtocolTestCase(unittest.TestCase):
     def setUp(self):
-        self.logging_conf = MagicMock()
-        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
-            self.proto = HeartbeatServerProtocol(self.logging_conf)
-        self.psetup_logging = psetup_logging
+        self.logger = MagicMock()
+        self.proto = HeartbeatServerProtocol(self.logger)
 
     def test_intance_creation_sets_needed_attributes(self):
-        self.assertEqual(self.proto.logger, self.psetup_logging.return_value)
+        self.assertEqual(self.proto.logger, self.logger)
 
-    def test_instance_init_sets_up_logging_properly(self):
-        self.psetup_logging.assert_called_once_with(
-            self.proto.__class__.__name__, rotatingfile_conf=self.logging_conf
-        )
-        
     def test_connection_made_sets_transport(self):
         with self.assertRaises(AttributeError):
             self.proto.transport
@@ -138,6 +148,7 @@ class HeartbeatServerProtocolTestCase(unittest.TestCase):
             self.proto.datagram_received(data, addr)
         pdecode.assert_called_once_with(data)
         self.proto.logger.info.assert_called_once_with(expected_msg)
+
 
 class EncodeBeatNumberTestCase(unittest.TestCase):
     def test_result(self):
