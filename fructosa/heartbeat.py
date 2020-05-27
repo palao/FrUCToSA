@@ -51,8 +51,8 @@ class HeartbeatProtocolFactory:
 class HeartbeatClientProtocol:
     _next_beat_number = 0 #  should be a descriptor?
     
-    def __init__(self, logger, on_con_lost):
-        self.on_con_lost = on_con_lost
+    def __init__(self, logger, on_sent):
+        self.on_sent = on_sent
         self.transport = None
         self.logger = logger
         
@@ -71,11 +71,8 @@ class HeartbeatClientProtocol:
             message_number=self.beat_number)
         self.logger.info(log_msg)
         self.__class__._next_beat_number += 1
-        self.transport.close()
-
-    def connection_lost(self, exc):
-        self.on_con_lost.set_result(True)
-
+        self.on_sent.set_result(True)
+        
 
 class HeartbeatServerProtocol:
     def __init__(self, logger):

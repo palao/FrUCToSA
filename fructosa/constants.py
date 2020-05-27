@@ -90,6 +90,7 @@ HEARTBEAT_START_SENDING_MSG_TEMPLATE = (
     "Start sending heartbeats to master ({master}:{hb_port})"
 )
 HEARTBEAT_SEND_MSG_TEMPLATE = "[hb#{message_number:06d}] sent to master"
+HEARTBEAT_INTERVAL_SECONDS = 6
 
 # Logging:
 LOGGER_LEVEL = logging.DEBUG

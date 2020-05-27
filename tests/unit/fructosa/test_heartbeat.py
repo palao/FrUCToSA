@@ -64,16 +64,16 @@ class HeartbeatClientProtocolFactoryTestCase(unittest.TestCase):
 
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def setUp(self):
-        self.on_con_lost = Mock()
+        self.on_sent = Mock()
         self.logger = MagicMock()
-        self.proto = HeartbeatClientProtocol(self.logger, self.on_con_lost)
+        self.proto = HeartbeatClientProtocol(self.logger, self.on_sent)
 
     def tearDown(self):
         HeartbeatClientProtocol._next_beat_number = 0
         
     def test_intance_creation_defines_needed_attributes(self):
         self.assertEqual(self.proto.beat_number, 0)
-        self.assertEqual(self.proto.on_con_lost, self.on_con_lost)
+        self.assertEqual(self.proto.on_sent, self.on_sent)
         self.assertIs(self.proto.transport, None)
         self.assertEqual(self.proto.logger, self.logger)
 
@@ -86,7 +86,7 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def test_connection_made_from_another_instance_increases_beat_number(self):
         mock_transport = Mock()
         self.proto.connection_made(mock_transport)
-        another_proto = HeartbeatClientProtocol(self.logger, self.on_con_lost)
+        another_proto = HeartbeatClientProtocol(self.logger, self.on_sent)
         self.assertEqual(another_proto.beat_number, self.proto.beat_number)
 
     ######################################################################
@@ -108,17 +108,13 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
         expected_msg = HEARTBEAT_SEND_MSG_TEMPLATE.format(
             message_number=expected_beat_number)
         self.proto.logger.info.assert_called_once_with(expected_msg)
-        self.proto.transport.close.assert_called_once_with()
+        self.proto.on_sent.set_result.assert_called_once_with(True)
         
     def test_message(self):
         with patch("fructosa.heartbeat.encode_beat_number") as pencode:
             res = self.proto.message
         pencode.assert_called_once_with(self.proto.beat_number)
         self.assertEqual(res, pencode.return_value)
-
-    def test_connection_lost(self):
-        self.proto.connection_lost(Mock())
-        self.proto.on_con_lost.set_result.assert_called_once_with(True)
 
 
 class HeartbeatServerProtocolTestCase(unittest.TestCase):
