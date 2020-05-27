@@ -54,6 +54,12 @@ class HeartbeatClientProtocol:
     _next_beat_number = 0 #  should be a descriptor?
     
     def __init__(self, logger):
+        """Customers of this classs must await on on_sent to ensure 
+        that the data has been dispatched:
+
+        >>> protocol = HeartbeatClient(logger)
+        >>> await protocol.on_sent
+        """
         self.transport = None
         self.logger = logger
         self.on_sent = asyncio.get_running_loop().create_future()
