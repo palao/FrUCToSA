@@ -55,25 +55,28 @@ class HeartbeatClientProtocolFactoryTestCase(unittest.TestCase):
         )
 
     def test_instance_calls_return_protocol_instance(self):
-        args = ("x", 45, None)
-        proto = self.factory(*args)
+        proto = self.factory()
         self.assertEqual(proto, self.factory._protocol_class.return_value)
         self.factory._protocol_class.assert_called_once_with(
-            self.factory.logger, *args)
+            self.factory.logger
+        )
 
 
 class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def setUp(self):
-        self.on_sent = Mock()
         self.logger = MagicMock()
-        self.proto = HeartbeatClientProtocol(self.logger, self.on_sent)
-
+        self.future = Mock()
+        with patch("fructosa.heartbeat.asyncio.get_running_loop") as mloop:
+            mloop.return_value.create_future.return_value = self.future
+            self.proto = HeartbeatClientProtocol(self.logger)
+        self.mloop = mloop
+        
     def tearDown(self):
         HeartbeatClientProtocol._next_beat_number = 0
-        
+
     def test_intance_creation_defines_needed_attributes(self):
         self.assertEqual(self.proto.beat_number, 0)
-        self.assertEqual(self.proto.on_sent, self.on_sent)
+        self.assertEqual(self.proto.on_sent, self.future)
         self.assertIs(self.proto.transport, None)
         self.assertEqual(self.proto.logger, self.logger)
 
@@ -86,7 +89,9 @@ class HeartbeatClientProtocolTestCase(unittest.TestCase):
     def test_connection_made_from_another_instance_increases_beat_number(self):
         mock_transport = Mock()
         self.proto.connection_made(mock_transport)
-        another_proto = HeartbeatClientProtocol(self.logger, self.on_sent)
+        with patch(
+                "fructosa.heartbeat.asyncio.get_running_loop", new=self.mloop):
+            another_proto = HeartbeatClientProtocol(self.logger)
         self.assertEqual(another_proto.beat_number, self.proto.beat_number)
 
     ######################################################################

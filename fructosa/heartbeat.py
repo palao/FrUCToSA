@@ -21,6 +21,8 @@
 #
 #######################################################################
 
+import asyncio
+
 from fructosa.logs import setup_logging
 
 from fructosa.constants import (
@@ -43,19 +45,19 @@ class HeartbeatProtocolFactory:
             rotatingfile_conf=logging_conf
         )
         self._protocol_class = protocol_class
-            
-    def __call__(self, *args):
-        return self._protocol_class(self.logger, *args)
+        
+    def __call__(self):
+        return self._protocol_class(self.logger)
         
         
 class HeartbeatClientProtocol:
     _next_beat_number = 0 #  should be a descriptor?
     
-    def __init__(self, logger, on_sent):
-        self.on_sent = on_sent
+    def __init__(self, logger):
         self.transport = None
         self.logger = logger
-        
+        self.on_sent = asyncio.get_running_loop().create_future()
+            
     @property
     def beat_number(self):
         return self._next_beat_number
