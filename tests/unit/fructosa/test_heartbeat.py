@@ -208,18 +208,10 @@ class HeartbeatSourceTestCase(unittest.TestCase):
         self.assertEqual(self.instance._host, self.host)
         self.assertEqual(self.instance._port, self.port)
         self.assertEqual(
-            self.instance._logger, self.psetup_logging.return_value
-        )
-        self.assertEqual(
             self.instance._hb_factory,
             self.hb_factory.return_value
         )
         
-    def test_logging_properly_configured(self):
-        self.psetup_logging.assert_called_once_with(
-            "Heartbeat", rotatingfile_conf=self.logging_conf
-        )
-
     def test_hb_factory_correctly_called(self):
         self.hb_factory.assert_called_once_with(
             HeartbeatClientProtocol, self.logging_conf

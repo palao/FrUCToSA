@@ -35,9 +35,6 @@ class HeartbeatSource:
     def __init__(self, dest_host, dest_port, logging_conf):
         self._host = dest_host
         self._port = dest_port
-        self._logger = setup_logging(
-            "Heartbeat", rotatingfile_conf=logging_conf
-        )
         self._hb_factory = HeartbeatProtocolFactory(
             HeartbeatClientProtocol, logging_conf
         )
@@ -57,6 +54,7 @@ class HeartbeatSource:
         self._protocol = protocol
 
     def future(self):
+        # This is a method to make the testing easier
         return self._protocol.on_sent
     
     async def complete_sending(self):
