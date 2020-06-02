@@ -57,7 +57,7 @@ class LAgent(FructosaD):
         return self._conf.sensors
     
     def run(self):
-        #self.submit_task(self.heartbeating) #  ?
+        self.submit_task(self.heartbeating)
         for sensor in self.sensors:
             self.submit_task(sensor, self._sensors_queue)
         self.submit_task(self.report_data)
