@@ -27,8 +27,45 @@ from fructosa.logs import setup_logging
 
 from fructosa.constants import (
     HEARTBEAT_RECEIVE_MSG_TEMPLATE, HEARTBEAT_SEND_MSG_TEMPLATE,
+    HEARTBEAT_INTERVAL_SECONDS
 )
 
+
+class HeartbeatSource:
+    def __init__(self, dest_host, dest_port, logging_conf):
+        self._host = dest_host
+        self._port = dest_port
+        self._logger = setup_logging(
+            "Heartbeat", rotatingfile_conf=logging_conf
+        )
+        self._hb_factory = HeartbeatProtocolFactory(
+            HeartbeatClientProtocol, logging_conf
+        )
+
+    async def __call__(self):
+        await self.create_datagram_endpoint()
+        await self.complete_sending()
+        await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS)
+
+    async def create_datagram_endpoint(self):
+        loop = asyncio.get_running_loop()
+        addr = (self._host, self._port)
+        transport, protocol = await loop.create_datagram_endpoint(
+            self._hb_factory, remote_addr=addr
+        )
+        self._transport = transport
+        self._protocol = protocol
+
+    def future(self):
+        return self._protocol.on_sent
+    
+    async def complete_sending(self):
+        try:
+            await self.future()
+        finally:
+            self._transport.close()
+        
+    
 def encode_beat_number(num):
     return num.to_bytes(length=64, byteorder="big", signed=False)
 

@@ -21,19 +21,29 @@
 #
 #######################################################################
 
+from inspect import iscoroutinefunction
 import unittest
 from unittest.mock import MagicMock, Mock, patch
+import asyncio
+
+from .aio_tools import AsyncioMock, asyncio_run
 
 from fructosa.heartbeat import (
     HeartbeatProtocolFactory,
     HeartbeatClientProtocol, HeartbeatServerProtocol,
+    HeartbeatSource,
     encode_beat_number, decode_beat_number,
 )
 
 from fructosa.constants import (
     HEARTBEAT_RECEIVE_MSG_TEMPLATE, HEARTBEAT_SEND_MSG_TEMPLATE,
+    HEARTBEAT_INTERVAL_SECONDS
 )
 
+
+class InventedException(Exception):
+    ...
+    
 
 class HeartbeatClientProtocolFactoryTestCase(unittest.TestCase):
     def setUp(self):
@@ -169,3 +179,142 @@ class DecodeBeatNumberTestCase(unittest.TestCase):
             with self.subTest(data=data, expected=num):
                 result = decode_beat_number(data)
                 self.assertEqual(result, num)
+
+
+class HeartbeatSourceTestCase(unittest.TestCase):
+    def setUp(self):
+        self.host = "culandron"
+        self.port = 34569
+        self.logging_conf = "my logging conf"
+        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
+            with patch("fructosa.heartbeat.HeartbeatProtocolFactory") as hbpf:
+                self.instance = HeartbeatSource(
+                    dest_host=self.host, dest_port=self.port,
+                    logging_conf=self.logging_conf
+                )
+        self.psetup_logging = psetup_logging
+        self.hb_factory = hbpf
+
+    def create_one_usage_instance(self):
+        with patch("fructosa.heartbeat.setup_logging") as psetup_logging:
+            with patch("fructosa.heartbeat.HeartbeatProtocolFactory") as hbpf:
+                instance = HeartbeatSource(
+                    dest_host=self.host, dest_port=self.port,
+                    logging_conf=self.logging_conf
+                )
+        return instance
+    
+    def test_instance_sets_attributes_from_input(self):
+        self.assertEqual(self.instance._host, self.host)
+        self.assertEqual(self.instance._port, self.port)
+        self.assertEqual(
+            self.instance._logger, self.psetup_logging.return_value
+        )
+        self.assertEqual(
+            self.instance._hb_factory,
+            self.hb_factory.return_value
+        )
+        
+    def test_logging_properly_configured(self):
+        self.psetup_logging.assert_called_once_with(
+            "Heartbeat", rotatingfile_conf=self.logging_conf
+        )
+
+    def test_hb_factory_correctly_called(self):
+        self.hb_factory.assert_called_once_with(
+            HeartbeatClientProtocol, self.logging_conf
+        )
+        
+    def test_call_is_coroutine(self):
+        self.assertTrue(iscoroutinefunction(self.instance.__call__))
+
+    def test_call_sequence_step1(self):
+        instance = self.create_one_usage_instance()
+        pcreate_datagram_endpoint = AsyncioMock(
+            side_effect=InventedException()
+        )
+        instance.create_datagram_endpoint = pcreate_datagram_endpoint
+        with self.assertRaises(InventedException):
+            asyncio_run(instance())
+
+    def test_call_sequence_step2(self):
+        instance = self.create_one_usage_instance()
+        pcreate_datagram_endpoint = AsyncioMock()
+        pcomplete_sending = AsyncioMock(
+            side_effect=InventedException()
+        )
+        instance.create_datagram_endpoint = pcreate_datagram_endpoint
+        instance.complete_sending = pcomplete_sending
+        with self.assertRaises(InventedException):
+            asyncio_run(instance())
+
+    def test_call_sequence_step3(self):
+        instance = self.create_one_usage_instance()
+        pcreate_datagram_endpoint = AsyncioMock()
+        pcomplete_sending = AsyncioMock()
+        psleep = AsyncioMock(side_effect=InventedException())
+        instance.create_datagram_endpoint = pcreate_datagram_endpoint
+        instance.complete_sending = pcomplete_sending
+        with patch("fructosa.heartbeat.asyncio.sleep", new=psleep):
+            with self.assertRaises(InventedException):
+                asyncio_run(instance())
+        psleep.mock.assert_called_once_with(HEARTBEAT_INTERVAL_SECONDS)
+        
+    def test_create_datagram_endpoint_is_coroutine(self):
+        self.assertTrue(
+            iscoroutinefunction(self.instance.create_datagram_endpoint)
+        )
+
+    def test_create_datagram_endpoint_sets_transport_and_protocol(self):
+        create_datagram_endpoint = AsyncioMock()
+        protocol = MagicMock()
+        transport = MagicMock()
+        def fake_cde(factory, remote_addr):
+            return transport, protocol
+        create_datagram_endpoint.mock.side_effect = fake_cde
+        loop = asyncio.get_event_loop()
+        loop.create_datagram_endpoint = create_datagram_endpoint
+        asyncio_run(self.instance.create_datagram_endpoint())
+        self.assertEqual(self.instance._transport, transport)
+        self.assertEqual(self.instance._protocol, protocol)
+
+    def test_future_method_returns_protocols_future(self):
+        instance = self.create_one_usage_instance()
+        instance._protocol = MagicMock()
+        self.assertEqual(
+            instance._protocol.on_sent,
+            instance.future()
+        )
+    def test_complete_sending_is_coroutine(self):
+        self.assertTrue(
+            iscoroutinefunction(self.instance.complete_sending)
+        )
+
+    def test_complete_sending_closes_transport(self):
+        pfuture = AsyncioMock()
+        instance = self.create_one_usage_instance()
+        instance._transport = MagicMock()
+        instance._protocol = Mock()
+        instance._protocol.on_sent = AsyncioMock()
+        with patch("fructosa.heartbeat.HeartbeatSource.future", new=pfuture):
+            asyncio_run(instance.complete_sending())
+        instance._transport.close.assert_called_once_with()
+
+    def test_complete_sending_closes_transport_even_if_exception(self):
+        pfuture = AsyncioMock(side_effect=InventedException())
+        instance = self.create_one_usage_instance()
+        instance._transport = MagicMock()
+        with patch("fructosa.heartbeat.HeartbeatSource.future", new=pfuture):
+            with self.assertRaises(InventedException):
+                asyncio_run(instance.complete_sending())
+        instance._transport.close.assert_called_once_with()
+        
+    def test_complete_sending_awaits_for_on_sent(self):
+        pfuture = AsyncioMock(side_effect=InventedException())
+        instance = self.create_one_usage_instance()
+        instance._transport = MagicMock()
+        with patch("fructosa.heartbeat.HeartbeatSource.future", new=pfuture):
+            with self.assertRaises(InventedException):
+                asyncio_run(instance.complete_sending())
+
+
