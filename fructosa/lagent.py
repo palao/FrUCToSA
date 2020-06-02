@@ -31,8 +31,10 @@ from fructosa.constants import (
     START_STOP_ERROR, NOT_RUNNING_MESSAGE, LAGENT_PROGRAM, PROTO_MEASUREMENT_MSG,
     LAGENT_TO_LMASTER_DATA_PORT_KEY, LMASTER_HOST_KEY,
     LAGENT_TO_LMASTER_CONNECTING_MSG, LAGENT_TO_LMASTER_CONNECTED_MSG,
+    HEARTBEAT_START_SENDING_MSG_TEMPLATE, HEARTBEAT_PORT, HEARTBEAT_INTERVAL_SECONDS, #  ?
 )
 from fructosa.maind import generic_main
+from fructosa.heartbeat import HeartbeatSource
 
 
 LAGENT_STARTING_MESSAGE = PROTO_STARTING_PROGRAM_MSG.format(program=LAGENT_PROGRAM)
@@ -55,6 +57,7 @@ class LAgent(FructosaD):
         return self._conf.sensors
     
     def run(self):
+        #self.submit_task(self.heartbeating) #  ?
         for sensor in self.sensors:
             self.submit_task(sensor, self._sensors_queue)
         self.submit_task(self.report_data)
@@ -66,7 +69,48 @@ class LAgent(FructosaD):
             value = await self._sensors_queue.get()
             self.logger.debug(PROTO_MEASUREMENT_MSG.format(value))
             await self._to_master_queue.put(pickle.dumps(value))
-            
+
+    async def heartbeating(self):
+        host = self._conf.lmaster[LMASTER_HOST_KEY]
+        port = HEARTBEAT_PORT
+        self.logger.info(
+            HEARTBEAT_START_SENDING_MSG_TEMPLATE.format(
+                master=host, hb_port=port
+            )
+        )
+        hb = HeartbeatSource(
+            dest_host=host, dest_port=port, logging_conf=self._conf.logging
+        )
+        while True:
+            await hb()
+
+    ############################################################################
+    
+    # old idea:
+    
+    # async def heartbeating(self): #  ?
+    #     host = self._conf.lmaster[LMASTER_HOST_KEY] #  ?
+    #     port = HEARTBEAT_PORT #  ?
+    #     self.logger.info( #  ?
+    #         HEARTBEAT_START_SENDING_MSG_TEMPLATE.format( #  ?
+    #             master=host, hb_port=port #  ?
+    #         ) #  ?
+    #     ) #  ?
+    #     hb_proto_factory = HeartbeatProtocolFactory(
+    #         HeartbeatClientProtocol, self._conf.logging) #  ?
+    #     while True: #  ?
+    #         await self._send_one_heartbeat(hb_proto_factory, host, port)
+
+    # async def _send_one_heartbeat(self, factory, host, port):
+    #     transport, protocol = await self._event_loop.create_datagram_endpoint(
+    #         factory, remote_addr=(host, port)
+    #     )
+    #     # try: #  ?
+    #     #     await protocol.on_sent #  ?
+    #     # finally: #  ?
+    #     #     transport.close() #  ?
+    #     # await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS) #  ?
+
     async def send_to_master(self):
         host = self._conf.lmaster[LMASTER_HOST_KEY]
         port = self._conf.lmaster[LAGENT_TO_LMASTER_DATA_PORT_KEY]

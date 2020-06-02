@@ -21,9 +21,12 @@
 #
 #######################################################################
 
+import asyncio
 import unittest
-from unittest.mock import patch, MagicMock, call, mock_open, PropertyMock
-from inspect import signature, Parameter
+from unittest.mock import (
+    patch, Mock, MagicMock, call, mock_open, PropertyMock,
+)
+from inspect import signature, Parameter, iscoroutinefunction
 import logging
 
 from .aio_tools import asyncio_run, AsyncioMock
@@ -32,7 +35,8 @@ import fructosa.lagent
 from fructosa.constants import (
     LAGENT_TO_LMASTER_DATA_PORT_KEY, LMASTER_HOST_KEY,
     LAGENT_TO_LMASTER_CONNECTING_MSG, LAGENT_TO_LMASTER_CONNECTED_MSG,
-    ACTION_STR, PIDFILE_STR, OWN_LOG_FILE_KEY, OWN_LOG_SECTION, 
+    ACTION_STR, PIDFILE_STR, OWN_LOG_FILE_KEY, OWN_LOG_SECTION,
+    HEARTBEAT_PORT, HEARTBEAT_START_SENDING_MSG_TEMPLATE,
 )
 
 
@@ -59,8 +63,8 @@ class MainTestCase(unittest.TestCase):
         self.main()
         pgeneric_main.assert_called_once_with(pagentconf, pagent)
 
-        
-class LAgentTestCase(unittest.TestCase):
+
+class LAgentBase:
     def setUp(self):
         self.test_class = fructosa.lagent.LAgent
         self.mocked_conf = MagicMock()
@@ -70,6 +74,8 @@ class LAgentTestCase(unittest.TestCase):
         setattr(self.mocked_conf, OWN_LOG_SECTION, self.simple_logging)
         self.simple_instance = self.test_class(self.mocked_conf)
 
+        
+class LAgentTestCase(LAgentBase, unittest.TestCase):
     def test_LAgent_is_subclass_of_FructosaD(self):
         from fructosa.fructosad import FructosaD
         self.assertTrue(issubclass(self.test_class, FructosaD))
@@ -161,7 +167,6 @@ class LAgentTestCase(unittest.TestCase):
         mocked_sensors.assert_called_once_with()
 
     def test_report_data_is_a_coroutine(self):
-        from inspect import iscoroutinefunction
         self.assertTrue(iscoroutinefunction(self.test_class.report_data))
 
     @patch("fructosa.lagent.pickle.dumps")
@@ -208,7 +213,6 @@ class LAgentTestCase(unittest.TestCase):
             log.debug.reset_mock()
 
     def test_send_to_master_is_a_coroutine(self):
-        from inspect import iscoroutinefunction
         self.assertTrue(iscoroutinefunction(self.test_class.send_to_master))
 
     def test_send_to_master_awaits_in_queue_get(self):
@@ -333,5 +337,54 @@ class LAgentTestCase(unittest.TestCase):
                 self.assertNotIn(msg, log_line)
 
 
+class LAgentHeartbeatTestCase(LAgentBase, unittest.TestCase):
+    def test_heartbeating_is_a_coroutine(self):
+        self.assertTrue(
+            iscoroutinefunction(self.test_class.heartbeating)
+        )
+
+    def test_heartbeating_logs_start_message(self):
+        mock_conf = MagicMock()
+        self.simple_instance._conf = mock_conf
+        host = "aylasole"
+        def getitem(value):
+            return {LMASTER_HOST_KEY: host}[value]
+        mock_conf.lmaster.__getitem__.side_effect = getitem
+        msg = HEARTBEAT_START_SENDING_MSG_TEMPLATE.format(
+            master=host, hb_port=HEARTBEAT_PORT
+        )
+        logger = self.simple_instance.__class__.__name__
+        with self.assertLogs(logger, level=logging.INFO) as log:
+            with patch("fructosa.lagent.HeartbeatSource") as hb_src:
+                hb_src.return_value = AsyncioMock(side_effect=InventedException())
+                with self.assertRaises(InventedException):
+                    asyncio_run(self.simple_instance.heartbeating())
+        self.assertIn(msg, log.output[0])
+
+    def test_heartbeating_creates_heartbeatsource_instance(self):
+        mock_conf = MagicMock()
+        self.simple_instance._conf = mock_conf
+        host = "bls"
+        mock_conf.lmaster.__getitem__.return_value = host
+        with patch("fructosa.lagent.HeartbeatSource") as hb_src:
+            hb_src.return_value = AsyncioMock(side_effect=InventedException())
+            with self.assertRaises(InventedException):
+                asyncio_run(self.simple_instance.heartbeating())
+        hb_src.assert_called_once_with(
+            dest_host=host,
+            dest_port=HEARTBEAT_PORT,
+            logging_conf=self.simple_instance._conf.logging
+        )
+        
+    def test_heartbeating_awaits_forever_for_heartbeatsource(self):
+        things = [1, "j", InventedException()]
+        ahb = AsyncioMock(side_effect=things)
+        with patch("fructosa.lagent.HeartbeatSource") as hb_src:
+            hb_src.return_value = ahb
+            with self.assertRaises(InventedException):
+                asyncio_run(self.simple_instance.heartbeating())
+        ahb.mock.assert_has_calls([call(), call(), call()])
+
+        
 if __name__ == "__main__":
     unittest.main()
