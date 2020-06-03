@@ -253,10 +253,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         self.setup_logparser(
             target_strings=(trying_to_connect_msg, hb_start, hb_msg_0)
         )
-        print("/"*80)
-        print((trying_to_connect_msg, hb_start, hb_msg_0))
-        print("\\"*80)
-        old_lines = self.tmplogparser.get_new_lines()
+        #old_lines = self.tmplogparser.get_new_lines()
         old_lines_summary = self.tmplogparser._line_counting_history[-1]
         # and, he launches lagent:
         self.program.args = ("start",)
@@ -278,10 +275,6 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
                 new_lines_summary[1][hb_start]
             )
             #  ...and the first message is indeed sent:
-            print("Old lines:")
-            print(old_lines)
-            print("New lines:")
-            print(new_lines)
             if test_hb:
                 self.assertEqual(
                     old_lines_summary[1][hb_msg_0]+1,
