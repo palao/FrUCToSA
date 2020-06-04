@@ -232,21 +232,21 @@ class HeartbeatSourceTestCase(unittest.TestCase):
     def test_call_sequence_step2(self):
         instance = self.create_one_usage_instance()
         pcreate_datagram_endpoint = AsyncioMock()
-        pcomplete_sending = AsyncioMock(
+        pcomplete = AsyncioMock(
             side_effect=InventedException()
         )
         instance.create_datagram_endpoint = pcreate_datagram_endpoint
-        instance.complete_sending = pcomplete_sending
+        instance.complete = pcomplete
         with self.assertRaises(InventedException):
             asyncio_run(instance())
 
     def test_call_sequence_step3(self):
         instance = self.create_one_usage_instance()
         pcreate_datagram_endpoint = AsyncioMock()
-        pcomplete_sending = AsyncioMock()
+        pcomplete = AsyncioMock()
         psleep = AsyncioMock(side_effect=InventedException())
         instance.create_datagram_endpoint = pcreate_datagram_endpoint
-        instance.complete_sending = pcomplete_sending
+        instance.complete = pcomplete
         with patch("fructosa.heartbeat.asyncio.sleep", new=psleep):
             with self.assertRaises(InventedException):
                 asyncio_run(instance())
@@ -277,36 +277,36 @@ class HeartbeatSourceTestCase(unittest.TestCase):
             instance._protocol.on_sent,
             instance.future()
         )
-    def test_complete_sending_is_coroutine(self):
+    def test_complete_is_coroutine(self):
         self.assertTrue(
-            iscoroutinefunction(self.instance.complete_sending)
+            iscoroutinefunction(self.instance.complete)
         )
 
-    def test_complete_sending_closes_transport(self):
+    def test_complete_closes_transport(self):
         pfuture = AsyncioMock()
         instance = self.create_one_usage_instance()
         instance._transport = MagicMock()
         instance._protocol = Mock()
         instance._protocol.on_sent = AsyncioMock()
         with patch("fructosa.heartbeat.HeartbeatSource.future", new=pfuture):
-            asyncio_run(instance.complete_sending())
+            asyncio_run(instance.complete())
         instance._transport.close.assert_called_once_with()
 
-    def test_complete_sending_closes_transport_even_if_exception(self):
+    def test_complete_closes_transport_even_if_exception(self):
         pfuture = AsyncioMock(side_effect=InventedException())
         instance = self.create_one_usage_instance()
         instance._transport = MagicMock()
         with patch("fructosa.heartbeat.HeartbeatSource.future", new=pfuture):
             with self.assertRaises(InventedException):
-                asyncio_run(instance.complete_sending())
+                asyncio_run(instance.complete())
         instance._transport.close.assert_called_once_with()
         
-    def test_complete_sending_awaits_for_on_sent(self):
+    def test_complete_awaits_for_on_sent(self):
         pfuture = AsyncioMock(side_effect=InventedException())
         instance = self.create_one_usage_instance()
         instance._transport = MagicMock()
         with patch("fructosa.heartbeat.HeartbeatSource.future", new=pfuture):
             with self.assertRaises(InventedException):
-                asyncio_run(instance.complete_sending())
+                asyncio_run(instance.complete())
 
 

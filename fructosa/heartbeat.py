@@ -31,39 +31,6 @@ from fructosa.constants import (
 )
 
 
-class HeartbeatSource:
-    def __init__(self, dest_host, dest_port, logging_conf):
-        self._host = dest_host
-        self._port = dest_port
-        self._hb_factory = HeartbeatProtocolFactory(
-            HeartbeatClientProtocol, logging_conf
-        )
-
-    async def __call__(self):
-        await self.create_datagram_endpoint()
-        await self.complete_sending()
-        await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS)
-
-    async def create_datagram_endpoint(self):
-        loop = asyncio.get_running_loop()
-        addr = (self._host, self._port)
-        transport, protocol = await loop.create_datagram_endpoint(
-            self._hb_factory, remote_addr=addr
-        )
-        self._transport = transport
-        self._protocol = protocol
-
-    def future(self):
-        # This is a method to make the testing easier
-        return self._protocol.on_sent
-    
-    async def complete_sending(self):
-        try:
-            await self.future()
-        finally:
-            self._transport.close()
-        
-    
 def encode_beat_number(num):
     return num.to_bytes(length=64, byteorder="big", signed=False)
 
@@ -131,3 +98,40 @@ class HeartbeatServerProtocol:
                 host=addr, message_number=num
             )
         )
+
+
+class HeartbeatSource:
+    protocol_class = HeartbeatClientProtocol #  <- sink: must change class
+    
+    def __init__(self, dest_host, dest_port, logging_conf):
+        self._host = dest_host
+        self._port = dest_port
+        self._hb_factory = HeartbeatProtocolFactory(
+            self.protocol_class, logging_conf
+        )
+
+    async def __call__(self):
+        await self.create_datagram_endpoint()
+        await self.complete()
+        await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS) #  <- not in sink
+
+    async def create_datagram_endpoint(self):
+        loop = asyncio.get_running_loop()
+        addr = (self._host, self._port)
+        transport, protocol = await loop.create_datagram_endpoint(
+            self._hb_factory, remote_addr=addr #  <- sink: kword changes
+        )
+        self._transport = transport
+        self._protocol = protocol
+
+    def future(self): #  <- rename it?
+        # This is a method to make the testing easier
+        return self._protocol.on_sent #  <- sink: return created future
+    
+    async def complete(self):
+        try:
+            await self.future()
+        finally:
+            self._transport.close()
+        
+    
