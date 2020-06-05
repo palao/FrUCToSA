@@ -79,7 +79,7 @@ class LAgent(FructosaD):
             )
         )
         hb = HeartbeatSource(
-            dest_host=host, dest_port=port, logging_conf=self._conf.logging
+            host=host, port=port, logging_conf=self._conf.logging
         )
         while True:
             await hb()

@@ -380,8 +380,8 @@ class LAgentHeartbeatTestCase(LAgentBase, unittest.TestCase):
             with self.assertRaises(InventedException):
                 asyncio_run(self.simple_instance.heartbeating())
         hb_src.assert_called_once_with(
-            dest_host=host,
-            dest_port=HEARTBEAT_PORT,
+            host=host,
+            port=HEARTBEAT_PORT,
             logging_conf=self.simple_instance._conf.logging
         )
         

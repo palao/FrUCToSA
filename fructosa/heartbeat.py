@@ -109,7 +109,7 @@ class HeartbeatBase:
             protocol_class, logging_conf
         )
         self.addr_parameter_name = "addr"
-        
+
     async def __call__(self):
         await self.create_datagram_endpoint()
         await self.complete()
