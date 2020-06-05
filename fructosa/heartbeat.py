@@ -56,15 +56,15 @@ class HeartbeatClientProtocol:
     _next_beat_number = 0 #  should be a descriptor?
     
     def __init__(self, logger):
-        """Customers of this classs must await on on_sent to ensure 
+        """Customers of this classs must await on on_complete to ensure 
         that the data has been dispatched:
 
         >>> protocol = HeartbeatClient(logger)
-        >>> await protocol.on_sent
+        >>> await protocol.on_complete
         """
         self.transport = None
         self.logger = logger
-        self.on_sent = asyncio.get_running_loop().create_future()
+        self.on_complete = asyncio.get_running_loop().create_future()
             
     @property
     def beat_number(self):
@@ -81,13 +81,14 @@ class HeartbeatClientProtocol:
             message_number=self.beat_number)
         self.logger.info(log_msg)
         self.__class__._next_beat_number += 1
-        self.on_sent.set_result(True)
+        self.on_complete.set_result(True)
         
 
 class HeartbeatServerProtocol:
     def __init__(self, logger):
         self.logger = logger
-    
+        self.on_complete = asyncio.get_running_loop().create_future()
+        
     def connection_made(self, transport):
         self.transport = transport
 
@@ -100,33 +101,31 @@ class HeartbeatServerProtocol:
         )
 
 
-class HeartbeatSource:
-    protocol_class = HeartbeatClientProtocol #  <- sink: must change class
-    
-    def __init__(self, dest_host, dest_port, logging_conf):
-        self._host = dest_host
-        self._port = dest_port
+class HeartbeatBase:
+    def __init__(self, host, port, logging_conf, protocol_class):
+        self._host = host
+        self._port = port
         self._hb_factory = HeartbeatProtocolFactory(
-            self.protocol_class, logging_conf
+            protocol_class, logging_conf
         )
-
+        self.addr_parameter_name = "addr"
+        
     async def __call__(self):
         await self.create_datagram_endpoint()
         await self.complete()
-        await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS) #  <- not in sink
 
     async def create_datagram_endpoint(self):
         loop = asyncio.get_running_loop()
-        addr = (self._host, self._port)
+        addr = {self.addr_parameter_name: (self._host, self._port)}
         transport, protocol = await loop.create_datagram_endpoint(
-            self._hb_factory, remote_addr=addr #  <- sink: kword changes
+            self._hb_factory, **addr
         )
         self._transport = transport
         self._protocol = protocol
 
-    def future(self): #  <- rename it?
+    def future(self):
         # This is a method to make the testing easier
-        return self._protocol.on_sent #  <- sink: return created future
+        return self._protocol.on_complete
     
     async def complete(self):
         try:
@@ -135,3 +134,17 @@ class HeartbeatSource:
             self._transport.close()
         
     
+class HeartbeatSource(HeartbeatBase):
+    def __init__(self, host, port, logging_conf):
+        super().__init__(host, port, logging_conf, HeartbeatClientProtocol)
+        self.addr_parameter_name = "remote_addr"
+        
+    async def __call__(self):
+        await super().__call__()
+        await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS)
+
+
+class HeartbeatSink(HeartbeatBase):
+    def __init__(self, host, port, logging_conf):
+        super().__init__(host, port, logging_conf, HeartbeatServerProtocol)
+        self.addr_parameter_name = "local_addr"
