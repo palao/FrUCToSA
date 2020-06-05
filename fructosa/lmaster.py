@@ -30,8 +30,9 @@ from fructosa.fructosad import FructosaD
 from fructosa.conf import LMasterConf
 from fructosa.maind import generic_main
 from fructosa.lmessage import LMessage, LMessageError
+from .heartbeat import HeartbeatSink
 
-from fructosa.constants import (
+from .constants import (
     PROTO_STARTING_PROGRAM_MSG, PROTO_STOPPED_PROGRAM_MSG, PROTO_CANT_STOP_MSG,
     START_STOP_ERROR, NOT_RUNNING_MESSAGE, LMASTER_PROGRAM, PROTO_MEASUREMENT_MSG,
     SERVING_PROTO_MESSAGE, INITIAL_LMASTER_SERVER_PACKET_SIZE,
@@ -39,6 +40,7 @@ from fructosa.constants import (
     LMASTER_HOST_KEY, GRAPHITE_HOST_KEY, GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
     PROTO_MSG_TO_GRAPHITE, LMASTER_TO_GRAPHITE_CONNECTING_MSG,
     LMASTER_TO_GRAPHITE_CONNECTED_MSG, LMASTER_TO_GRAPHITE_RETRY_MSG,
+    HEARTBEAT_LISTENING_MSG_TEMPLATE, HEARTBEAT_PORT,
 )
 
 LMASTER_STARTING_MESSAGE = PROTO_STARTING_PROGRAM_MSG.format(program=LMASTER_PROGRAM)
@@ -63,6 +65,7 @@ class LMaster(FructosaD):
         """
         server = self._create_server()
         self._run_server(server)
+        self.submit_task(self.heartbeats_sink)
         self.submit_task(self._send_to_graphite)
         #  More tasks can be added here
         super().run()
@@ -131,7 +134,55 @@ class LMaster(FructosaD):
             # 1. log (connection to graphite lost),
             # 2. submit task again (self.submit_task(self._send_to_graphite))
             # 3. and exit
- 
+
+
+    async def heartbeats_sink(self):
+        host = self._conf.lmaster[LMASTER_HOST_KEY]
+        port = HEARTBEAT_PORT
+        self.logger.info(
+            HEARTBEAT_LISTENING_MSG_TEMPLATE.format(
+                master=host, hb_port=port
+            )
+        )
+        hb_sink = HeartbeatSink(
+            host=host, port=port, logging_conf=self._conf.logging
+        )
+        await hb_sink()
+        
+    # async def heartbeats_sink(self): #  ?
+    #     # print("Starting UDP server")
+
+    #     # # Get a reference to the event loop as we plan to use
+    #     # # low-level APIs.
+    #     # loop = asyncio.get_running_loop()
+
+    #     # One protocol instance will be created to serve all
+    #     # client requests.
+    #     from .constants import HEARTBEAT_PORT
+    #     from .heartbeat import HeartbeatProtocolFactory, HeartbeatServerProtocol
+    #     import traceback
+    #     import sys
+    #     host = self._conf.lmaster[LMASTER_HOST_KEY]
+    #     self.logger.debug("Enter the dragon")
+    #     try:
+    #         transport, protocol = await self._event_loop.create_datagram_endpoint(
+    #             HeartbeatProtocolFactory(HeartbeatServerProtocol, self._conf.logging),
+    #             local_addr=(host, HEARTBEAT_PORT))
+    #         for t in asyncio.all_tasks():
+    #             self.logger.info("{}".format(t))
+    #         self.logger.info("/"*80)
+    #     except:
+    #         msg = traceback.format_exception(*sys.exc_info())
+    #         for l in msg:
+    #             self.logger.error(l)
+    #     self.logger.debug("datagram created")
+    #     try:
+    #         await asyncio.sleep(3600)  # Serve for 1 hour.
+    #         # instead, mimick what is done in LAgent: await on a never done future
+    #     finally:
+    #         transport.close()
+
+
     
 def main():
     generic_main(LMasterConf, LMaster)

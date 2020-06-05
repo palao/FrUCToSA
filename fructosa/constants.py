@@ -86,6 +86,9 @@ GENERIC_CONNECTED_MSG = " ...connection established"
 
 HEARTBEAT_PORT = 37788
 HEARTBEAT_RECEIVE_MSG_TEMPLATE = "[host={host}][hb#{message_number:06d}]"
+HEARTBEAT_LISTENING_MSG_TEMPLATE = (
+    "Listening to heartbeats ({master}:{hb_port})"
+)
 HEARTBEAT_START_SENDING_MSG_TEMPLATE = (
     "Start sending heartbeats to master ({master}:{hb_port})"
 )

@@ -22,9 +22,10 @@
 #######################################################################
 
 import unittest
+import logging
 
 from unittest.mock import patch, MagicMock, call, mock_open, PropertyMock
-from inspect import signature, Parameter
+from inspect import signature, Parameter, iscoroutinefunction
 
 from .aio_tools import asyncio_run, AsyncioMock
 
@@ -35,7 +36,8 @@ from fructosa.constants import (
     GRAPHITE_HOST_KEY, GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
     PROTO_MSG_TO_GRAPHITE, LMASTER_TO_GRAPHITE_CONNECTING_MSG,
     LMASTER_TO_GRAPHITE_CONNECTED_MSG, LMASTER_TO_GRAPHITE_RETRY_MSG,
-    ACTION_STR, PIDFILE_STR, OWN_LOG_SECTION, OWN_LOG_FILE_KEY, 
+    ACTION_STR, PIDFILE_STR, OWN_LOG_SECTION, OWN_LOG_FILE_KEY,
+    HEARTBEAT_LISTENING_MSG_TEMPLATE, HEARTBEAT_PORT,
 )
 
 
@@ -63,7 +65,7 @@ class MainTestCase(unittest.TestCase):
         pgeneric_main.assert_called_once_with(pmasterconf, pmaster)
 
         
-class LMasterTestCase(unittest.TestCase):
+class LMasterBase:
     def setUp(self):
         self.test_class = fructosa.lmaster.LMaster
         self.mocked_conf = MagicMock()
@@ -73,6 +75,8 @@ class LMasterTestCase(unittest.TestCase):
         setattr(self.mocked_conf, OWN_LOG_SECTION, self.simple_logging)
         self.simple_instance = self.test_class(self.mocked_conf)
 
+
+class LMasterTestCase(LMasterBase, unittest.TestCase):
     def test_LMaster_is_subclass_of_FructosaD(self):
         from fructosa.fructosad import FructosaD
         self.assertTrue(issubclass(self.test_class, FructosaD))
@@ -114,6 +118,7 @@ class LMasterTestCase(unittest.TestCase):
         expected_calls = [
             call._create_server(),
             call._run_server(server),
+            call.submit_task(self.simple_instance.heartbeats_sink),
             call.submit_task(self.simple_instance._send_to_graphite),
             call.run(),
         ]
@@ -561,6 +566,52 @@ class LMasterTestCase(unittest.TestCase):
     #             writer.write.reset_mock()
 
                 
+class LMasterHeartbeatTestCase(LMasterBase, unittest.TestCase):
+    def test_heartbeats_sink_is_a_coroutine(self):
+        self.assertTrue(
+            iscoroutinefunction(self.test_class.heartbeats_sink)
+        )
+
+    def test_heartbeats_sink_logs_start_message(self):
+        mock_conf = MagicMock()
+        self.simple_instance._conf = mock_conf
+        host = "aylasole"
+        def getitem(value):
+            return {LMASTER_HOST_KEY: host}[value]
+        mock_conf.lmaster.__getitem__.side_effect = getitem
+        msg = HEARTBEAT_LISTENING_MSG_TEMPLATE.format(
+            master=host, hb_port=HEARTBEAT_PORT
+        )
+        logger = self.simple_instance.__class__.__name__
+        with self.assertLogs(logger, level=logging.INFO) as log:
+            with patch("fructosa.lmaster.HeartbeatSink") as hb_snk:
+                hb_snk.return_value = AsyncioMock(side_effect=InventedException())
+                with self.assertRaises(InventedException):
+                    asyncio_run(self.simple_instance.heartbeats_sink())
+        self.assertIn(msg, log.output[0])
+
+    def test_heartbeats_sink_creates_heartbeatsource_instance(self):
+        mock_conf = MagicMock()
+        self.simple_instance._conf = mock_conf
+        host = "bls"
+        mock_conf.lmaster.__getitem__.return_value = host
+        with patch("fructosa.lmaster.HeartbeatSink") as hb_snk:
+            hb_snk.return_value = AsyncioMock(side_effect=InventedException())
+            with self.assertRaises(InventedException):
+                asyncio_run(self.simple_instance.heartbeats_sink())
+        hb_snk.assert_called_once_with(
+            host=host, port=HEARTBEAT_PORT,
+            logging_conf=self.simple_instance._conf.logging
+        )
+        
+    def test_heartbeats_sink_awaits_for_heartbeatsink(self):
+        ahb = AsyncioMock()
+        with patch("fructosa.lmaster.HeartbeatSink") as hb_snk:
+            hb_snk.return_value = ahb
+            asyncio_run(self.simple_instance.heartbeats_sink())
+        ahb.mock.assert_called_once_with()
+
+        
 if __name__ == "__main__":
     unittest.main()
 

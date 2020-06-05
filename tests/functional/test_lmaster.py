@@ -38,7 +38,8 @@ from fructosa.constants import (
     LMASTER_DESCRIPTION, CONF_READ_MSG, LMASTER_DEFAULT_CONFIGFILE,
     LAGENT_DEFAULT_CONFIGFILE, PROTO_SENSOR_STARTED_MSG, LMASTER_DEFAULT_CONFIGFILE,
     PROTO_MEASUREMENT_RECEIVED_MSG, PROTO_INVALID_SENSOR_MSG,
-    HEARTBEAT_RECEIVE_MSG_TEMPLATE,
+    HEARTBEAT_RECEIVE_MSG_TEMPLATE, HEARTBEAT_LISTENING_MSG_TEMPLATE,
+    HEARTBEAT_PORT
 )
 from fructosa.lmaster import LMASTER_STARTING_MESSAGE, LMASTER_STOP_MESSAGE
 from fructosa.conf import LMASTER_DEFAULT_PIDFILE, LAGENT_DEFAULT_PIDFILE
@@ -76,11 +77,18 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
         )
         #self.prepare_sensors(lagent_conf)
         lmaster_conf = self.prepare_config_from_file(lmaster_config_file_name)
+        listeining_to_heartbeats = HEARTBEAT_LISTENING_MSG_TEMPLATE.format(
+            master=lmaster_conf["lmaster"]["host"],
+            hb_port=HEARTBEAT_PORT,
+        )
         heartbeat_received = HEARTBEAT_RECEIVE_MSG_TEMPLATE.format(
             host="quaco", message_number=0,
         )
-        self.setup_logparser(target_strings=(heartbeat_received,))
+        self.setup_logparser(
+            target_strings=(listeining_to_heartbeats, heartbeat_received,)
+        )
         old_lines = self.tmplogparser.get_new_lines()
+        old_lines_summary = self.tmplogparser._line_counting_history[-1]
         #and he launches lmaster and lagent:
         self.program.args = ("start",)
         lagent.args = ("start",)
@@ -91,11 +99,19 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
             self.wait_for_environment()
             new_lines = self.tmplogparser.get_new_lines()
             self.assertTrue(len(new_lines) > 0)
-            for line in new_lines:
-                values = [k in line for k in self.sensors]
-                self.assertTrue(reduce(lambda x,y: x or y, values))
-                self.assertIn("INFO", line)
-                self.assertIn("LMaster", line)
+            new_lines = self.tmplogparser.get_new_lines()
+            new_lines_summary = self.tmplogparser._line_counting_history[-1]
+            #  He finds in the logs a message claiming that the program is listening
+            # to heartbeats:
+            self.assertEqual(
+                old_lines_summary[1][listeining_to_heartbeats]+1,
+                new_lines_summary[1][listeining_to_heartbeats]
+            )
+            # and also a message saying that the first heartbeat arrived!
+            self.assertEqual(
+                old_lines_summary[1][heartbeat_received]+1,
+                new_lines_summary[1][heartbeat_received]
+            )            
         # This was very satisfying!
         # He stops lagent:
     # and lmaster:
