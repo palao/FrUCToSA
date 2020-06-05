@@ -83,7 +83,7 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
         )
         heartbeat_received = HEARTBEAT_RECEIVE_MSG_TEMPLATE.format(
             host="quaco", message_number=0,
-        )
+        )[11:]#just cut the "random" initial part
         self.setup_logparser(
             target_strings=(listeining_to_heartbeats, heartbeat_received,)
         )
@@ -96,11 +96,10 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
         with self.ft_env(*programs) as start_lmaster_lagent:
             # Immediately he sees that the first heartbeat signal has arrived 
             # and is reported in the logs:
-            self.wait_for_environment()
-            new_lines = self.tmplogparser.get_new_lines()
-            self.assertTrue(len(new_lines) > 0)
+            self.wait_for_environment(30)
             new_lines = self.tmplogparser.get_new_lines()
             new_lines_summary = self.tmplogparser._line_counting_history[-1]
+            self.assertTrue(len(new_lines) > 0)
             #  He finds in the logs a message claiming that the program is listening
             # to heartbeats:
             self.assertEqual(
@@ -191,12 +190,6 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
             wait_t = 2.1*max([float(v["frequency"]) for k,v in self.sensors.items()])
             self.wait_for_environment(wait_t)
             new_lines = self.tmplogparser.get_new_lines()
-            print(
-                "file:", self.ft_env.log_file_name,
-                "old lines:", old_lines,
-                "new lines:", new_lines,
-                sep="\n  "
-            )
             self.assertTrue(len(new_lines) > 0)
             for line in new_lines:
                 values = [k in line for k in self.sensors]
