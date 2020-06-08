@@ -84,7 +84,7 @@ class BasicGraphiteTestCase(MultiProgramBaseStartStop, unittest.TestCase):
             simple_conf_files = ("lagent-graphite.1.conf",)
         elif self.ft_env.name == DOCKER_FT_ENVIRONMENT:
             #simple_conf_files = ("lmaster-graphite.docker.1.conf", "lagent-test.docker.1.conf")
-            simple_conf_files = ("lagent-graphite.docker.1.conf")
+            simple_conf_files = ("lagent-graphite.docker.1.conf",)
         confs = [
             self.prepare_config_from_file(
                 conf4test, default_configfile=def_conf, program=prog,
