@@ -119,7 +119,7 @@ class LMasterTestCase(LMasterBase, unittest.TestCase):
             call._create_server(),
             call._run_server(server),
             call.submit_task(self.simple_instance.heartbeats_sink),
-            call.submit_task(self.simple_instance._send_to_graphite),
+            #call.submit_task(self.simple_instance._send_to_graphite),
             call.run(),
         ]
         self.simple_instance.run()

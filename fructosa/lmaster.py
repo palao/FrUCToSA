@@ -66,7 +66,7 @@ class LMaster(FructosaD):
         server = self._create_server()
         self._run_server(server)
         self.submit_task(self.heartbeats_sink)
-        self.submit_task(self._send_to_graphite)
+        #self.submit_task(self._send_to_graphite)
         #  More tasks can be added here
         super().run()
     
