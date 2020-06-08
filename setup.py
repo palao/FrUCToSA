@@ -43,10 +43,10 @@ install_requirements = ["psutil"]
 
 setup(
     name="FrUCToSA",
-    version="0.2.1",
+    version="version='0.2.2'",
     #use_scm_version={"write_to": os.path.join("fructosa", "version.py")},
     #use_scm_version={"version_scheme": "post-release"},
-    #version="0.2.1",
+    #version="version='0.2.2'",
     #setup_requires=['setuptools_scm'],
     description="A package to collect and analyze basic performance data from clusters",
     long_description=long_description,
