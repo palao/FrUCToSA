@@ -27,6 +27,7 @@ import os
 import platform
 import shutil
 import socket
+import time
 
 from tests.common.docker import FTDocker
 from tests.functional.graphite import Graphite
@@ -371,8 +372,7 @@ class DockerFTEnvironmentType(FTEnvironmentType):
                 command.exit_code = env._manager.exit_code(command.name)
                 command.args = ("stop",)
                 command(pre_exe=("docker", "exec", command.container["name"]))
-        # import time#
-        # time.sleep(50)#
+        time.sleep(10) #  To be sure that environment is cleanup
         env._manager.down()
 
     @staticmethod
