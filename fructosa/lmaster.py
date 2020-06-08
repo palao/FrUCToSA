@@ -38,8 +38,8 @@ from .constants import (
     SERVING_PROTO_MESSAGE, INITIAL_LMASTER_SERVER_PACKET_SIZE,
     PROTO_MEASUREMENT_RECEIVED_MSG, LAGENT_TO_LMASTER_DATA_PORT_KEY,
     LMASTER_HOST_KEY, GRAPHITE_HOST_KEY, GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
-    PROTO_MSG_TO_GRAPHITE, LMASTER_TO_GRAPHITE_CONNECTING_MSG,
-    LMASTER_TO_GRAPHITE_CONNECTED_MSG, LMASTER_TO_GRAPHITE_RETRY_MSG,
+    PROTO_MSG_TO_GRAPHITE, TO_GRAPHITE_CONNECTING_MSG,
+    TO_GRAPHITE_CONNECTED_MSG, TO_GRAPHITE_RETRY_MSG,
     HEARTBEAT_LISTENING_MSG_TEMPLATE, HEARTBEAT_PORT,
 )
 
@@ -101,7 +101,7 @@ class LMaster(FructosaD):
         # This should be refactored: 1) create connection, and 2) write data
         host = self._conf.graphite[GRAPHITE_HOST_KEY]
         port = self._conf.graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY]
-        msg = LMASTER_TO_GRAPHITE_CONNECTING_MSG.format(
+        msg = TO_GRAPHITE_CONNECTING_MSG.format(
             host_key=GRAPHITE_HOST_KEY, host=host,
             port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY, port=port,
         )
@@ -112,13 +112,13 @@ class LMaster(FructosaD):
                     host, port, loop=self._event_loop
                 )
             except ConnectionRefusedError:
-                self.logger.info(LMASTER_TO_GRAPHITE_RETRY_MSG.format(host=host))
+                self.logger.info(TO_GRAPHITE_RETRY_MSG.format(host=host))
                 await asyncio.sleep(1)
             #except OSError:
             # if graphite is not there, OSError can happen
             #    self.logger.error("OSError")
             else:
-                self.logger.info(LMASTER_TO_GRAPHITE_CONNECTED_MSG)
+                self.logger.info(TO_GRAPHITE_CONNECTED_MSG)
                 break
         while True:
             raw_message = await self._to_graphite_queue.get()

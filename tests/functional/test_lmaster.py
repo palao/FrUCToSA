@@ -114,8 +114,14 @@ class LMasterFunctionalityDefaultConfTest(BaseStartStop, BaseLAgent, unittest.Te
         # This was very satisfying!
         # He stops lagent:
     # and lmaster:
-    
+
+    @unittest.skip
     def test_lmaster_receives_data_from_lagent(self):
+        # For version 0.3.0, this FT is removed because the data goes directly
+        # from lagent to graphite.
+        #  Before it used to go from lagent to lmaster and then to graphite
+        #  (DPalao, 9/6/2020)
+        # ---
         #  Tux has wants to check that lmaster and lagent can communicate.
         # So, he prepares configurations files for lmaster and lagent:
         lagent = LAgentWrapper(pidfile=LAGENT_DEFAULT_PIDFILE)

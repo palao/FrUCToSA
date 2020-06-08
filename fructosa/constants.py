@@ -135,11 +135,11 @@ GRAPHITE_HOST_KEY = DEFAULT_HOST_KEY
 GRAPHITE_HOST = "localhost"
 GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY = "carbon receiver pickle port"
 GRAPHITE_CARBON_RECEIVER_PICKLE_PORT = 2004
-LMASTER_TO_GRAPHITE_CONNECTED_MSG = GENERIC_CONNECTED_MSG
-LMASTER_TO_GRAPHITE_CONNECTING_MSG = (
+TO_GRAPHITE_CONNECTED_MSG = GENERIC_CONNECTED_MSG
+TO_GRAPHITE_CONNECTING_MSG = (
     "Connecting to Graphite ({host_key}={host}, {port_key}={port}) to send data from sensors..."
 )
-LMASTER_TO_GRAPHITE_RETRY_MSG = "... connection to {host} failed. Retrying."
+TO_GRAPHITE_RETRY_MSG = "... connection to {host} failed. Retrying."
 WRONG_MESSAGE_TO_GRAPHITE_MSG = "Measurement from '{sensor}' cannot be delivered to Graphite"
 WRONG_MESSAGE_TO_GRAPHITE_DETAIL_MSG = "[sensor={sensor}] measurement={measurement}"
 

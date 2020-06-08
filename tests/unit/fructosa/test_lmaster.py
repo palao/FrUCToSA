@@ -34,8 +34,8 @@ from fructosa.lmessage import UnsuitableLMessage, WrongPickleMessage
 from fructosa.constants import (
     LAGENT_TO_LMASTER_DATA_PORT_KEY, LMASTER_HOST_KEY,
     GRAPHITE_HOST_KEY, GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
-    PROTO_MSG_TO_GRAPHITE, LMASTER_TO_GRAPHITE_CONNECTING_MSG,
-    LMASTER_TO_GRAPHITE_CONNECTED_MSG, LMASTER_TO_GRAPHITE_RETRY_MSG,
+    PROTO_MSG_TO_GRAPHITE, TO_GRAPHITE_CONNECTING_MSG,
+    TO_GRAPHITE_CONNECTED_MSG, TO_GRAPHITE_RETRY_MSG,
     ACTION_STR, PIDFILE_STR, OWN_LOG_SECTION, OWN_LOG_FILE_KEY,
     HEARTBEAT_LISTENING_MSG_TEMPLATE, HEARTBEAT_PORT,
 )
@@ -455,7 +455,7 @@ class LMasterTestCase(LMasterBase, unittest.TestCase):
         # The following is to avoid having problems with the event loop
         self.simple_instance._event_loop = MagicMock()
         mock_open_connection.mock.side_effect = InventedException()
-        expected = LMASTER_TO_GRAPHITE_CONNECTING_MSG.format(
+        expected = TO_GRAPHITE_CONNECTING_MSG.format(
             host_key=GRAPHITE_HOST_KEY,
             host="jamacuquen",
             port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
@@ -489,13 +489,13 @@ class LMasterTestCase(LMasterBase, unittest.TestCase):
         # The following is to avoid having problems with the event loop
         self.simple_instance._event_loop = MagicMock()
         mock_open_connection.mock.return_value = (reader, writer)
-        expected0 = LMASTER_TO_GRAPHITE_CONNECTING_MSG.format(
+        expected0 = TO_GRAPHITE_CONNECTING_MSG.format(
             host_key=GRAPHITE_HOST_KEY,
             host="jamacuquen",
             port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
             port=21555,
         )
-        proto = [expected0, LMASTER_TO_GRAPHITE_CONNECTED_MSG]
+        proto = [expected0, TO_GRAPHITE_CONNECTED_MSG]
         cn = self.simple_instance.__class__.__name__
         expected = ["{}:{}:{}".format(log_level, cn, _) for _ in proto]
         self.simple_instance._to_graphite_queue.get = AsyncioMock(
@@ -527,14 +527,14 @@ class LMasterTestCase(LMasterBase, unittest.TestCase):
         trials = [ConnectionRefusedError()]*3 + [(reader, writer)]
         #trials = [ConnectionRefusedError(), (reader, writer)]
         mock_open_connection.mock.side_effect = trials
-        start = LMASTER_TO_GRAPHITE_CONNECTING_MSG.format(
+        start = TO_GRAPHITE_CONNECTING_MSG.format(
             host_key=GRAPHITE_HOST_KEY,
             host="gul",
             port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
             port=21555,
         )
-        retry_msg = LMASTER_TO_GRAPHITE_RETRY_MSG.format(host="gul")
-        connected = LMASTER_TO_GRAPHITE_CONNECTED_MSG
+        retry_msg = TO_GRAPHITE_RETRY_MSG.format(host="gul")
+        connected = TO_GRAPHITE_CONNECTED_MSG
         proto = [start] + [retry_msg]*3 + [connected]
         cn = self.simple_instance.__class__.__name__
         expected = ["{}:{}:{}".format(log_level, cn, _) for _ in proto]

@@ -33,7 +33,7 @@ from tests.functional.environment import LOCALHOST_FT_ENVIRONMENT, DOCKER_FT_ENV
 
 from fructosa.constants import (
     LMASTER_DEFAULT_CONFIGFILE, LAGENT_DEFAULT_CONFIGFILE,
-    LMASTER_TO_GRAPHITE_CONNECTING_MSG, LMASTER_TO_GRAPHITE_CONNECTED_MSG,
+    TO_GRAPHITE_CONNECTING_MSG, TO_GRAPHITE_CONNECTED_MSG,
     GRAPHITE_HOST_KEY, GRAPHITE_SECTION,
     GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
     WRONG_MESSAGE_TO_GRAPHITE_MSG, WRONG_MESSAGE_TO_GRAPHITE_DETAIL_MSG,
@@ -70,18 +70,21 @@ class BasicGraphiteTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # once more
         pass
     
-    def test_messages_sent_by_lmaster_arrive_to_graphite(self):
+    def test_messages_sent_by_lagent_arrive_to_graphite(self):
         #  Tux has been told by the developers that FrUCToSA can communicate with
         # Graphite: it sends metrics to it. He wants to check this feature, that
         # he finds promising.
-        # So he prepares config files for lagent and lmaster:
-        lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)
+        # So he prepares a config file for lagent:
+        #lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)
         lagent = LAgentWrapper(pidfile=LAGENT_DEFAULT_PIDFILE)
-        programs = (lmaster, lagent)
+        #programs = (lmaster, lagent)
+        programs = (lagent,)
         if self.ft_env.name == LOCALHOST_FT_ENVIRONMENT:
-            simple_conf_files = ("lmaster-graphite.1.conf", "lagent-test.1.conf")
+            #simple_conf_files = ("lmaster-graphite.1.conf", "lagent-test.1.conf")
+            simple_conf_files = ("lagent-graphite.1.conf",)
         elif self.ft_env.name == DOCKER_FT_ENVIRONMENT:
-            simple_conf_files = ("lmaster-graphite.docker.1.conf", "lagent-test.docker.1.conf")
+            #simple_conf_files = ("lmaster-graphite.docker.1.conf", "lagent-test.docker.1.conf")
+            simple_conf_files = ("lagent-graphite.docker.1.conf")
         confs = [
             self.prepare_config_from_file(
                 conf4test, default_configfile=def_conf, program=prog,
@@ -89,16 +92,16 @@ class BasicGraphiteTestCase(MultiProgramBaseStartStop, unittest.TestCase):
                 simple_conf_files, self.default_config_files, programs)
         ]
         # he restarts graphite, to be sure that there is no cache contaminating the test
-        # and when he launches the programs (lmaster and lagent)
-        lmaster.args = ("start",)
+        # and when he launches the program lagent
+        #lmaster.args = ("start",)
         lagent.args = ("start",)
-        trying_graphite_conn = LMASTER_TO_GRAPHITE_CONNECTING_MSG.format(
+        trying_graphite_conn = TO_GRAPHITE_CONNECTING_MSG.format(
             host_key=GRAPHITE_HOST_KEY,
             host=confs[0][GRAPHITE_SECTION][GRAPHITE_HOST_KEY],
             port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
             port=confs[0][GRAPHITE_SECTION][GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY],
         )
-        graphite_connected = LMASTER_TO_GRAPHITE_CONNECTED_MSG
+        graphite_connected = TO_GRAPHITE_CONNECTED_MSG
         graphite_lines = (trying_graphite_conn, graphite_connected)
         proto_wrong_value_from_graphite_line = "{} ({})".format(
             WRONG_MESSAGE_TO_GRAPHITE_MSG, WRONG_MESSAGE_TO_GRAPHITE_DETAIL_MSG
@@ -109,7 +112,7 @@ class BasicGraphiteTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         graphite_error_lines = (wrong_value_from_graphite_line,)
         self.setup_logparser(target_strings=graphite_lines+graphite_error_lines)
 
-        with self.ft_env(*programs) as graphite_lmaster_lagent:
+        with self.ft_env(*programs) as graphite_lagent:
             # he can see that after waiting some little time the connection with graphite
             # is announced in the logs
             self.wait_for_environment(15)
@@ -155,6 +158,7 @@ class BasicGraphiteTestCase(MultiProgramBaseStartStop, unittest.TestCase):
                     print(new_lines)
                     print()
                     self.fail("'{}' not found in the logs".format(target))
+
 
 if __name__ == "__main__":
     unittest.main()
