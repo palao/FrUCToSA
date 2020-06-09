@@ -31,12 +31,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-# def get_requirements():
-#     """Find the required packages from a 'single source of truth' (tm)."""
-#     req_file_name = os.path.join(here, "requirements", 'production.text')
-#     with open(req_file_name, encoding='utf-8') as f:
-#         reqs = [_.strip() for _ in f]
-#     return reqs
 
 install_requirements = ["psutil"]
 
@@ -44,10 +38,6 @@ install_requirements = ["psutil"]
 setup(
     name="FrUCToSA",
     version="0.3.0",
-    #use_scm_version={"write_to": os.path.join("fructosa", "version.py")},
-    #use_scm_version={"version_scheme": "post-release"},
-    #version="version='0.3.0'",
-    #setup_requires=['setuptools_scm'],
     description="A package to collect and analyze basic performance data from clusters",
     long_description=long_description,
     author="David Palao",
