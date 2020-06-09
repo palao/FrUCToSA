@@ -43,7 +43,7 @@ install_requirements = ["psutil"]
 
 setup(
     name="FrUCToSA",
-    version="version='0.3.0'",
+    version="0.3.0",
     #use_scm_version={"write_to": os.path.join("fructosa", "version.py")},
     #use_scm_version={"version_scheme": "post-release"},
     #version="version='0.3.0'",
