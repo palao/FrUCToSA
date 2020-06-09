@@ -144,18 +144,12 @@ class FructosaD:
         
     async def _send_to_graphite(self):
         # This should be refactored: 1) create connection, and 2) write data
-        try:
-            host = self._conf.graphite[GRAPHITE_HOST_KEY]
-            port = self._conf.graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY]
-            msg = TO_GRAPHITE_CONNECTING_MSG.format(
-                host_key=GRAPHITE_HOST_KEY, host=host,
-                port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY, port=port,
-            )
-        except:
-            import traceback
-            import sys
-            emsg = traceback.format_exception(*sys.exc_info())
-            self.logger.error(emsg)
+        host = self._conf.graphite[GRAPHITE_HOST_KEY]
+        port = self._conf.graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY]
+        msg = TO_GRAPHITE_CONNECTING_MSG.format(
+            host_key=GRAPHITE_HOST_KEY, host=host,
+            port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY, port=port,
+        )
         self.logger.info(msg)
         while True:
             try:

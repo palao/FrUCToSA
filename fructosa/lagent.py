@@ -59,7 +59,7 @@ class LAgent(FructosaD):
         self.submit_task(self.heartbeating)
         for sensor in self.sensors:
             self.submit_task(sensor, self._sensors_queue)
-        #self.submit_task(self.report_data)
+        self.submit_task(self.report_data)
         self.submit_task(self._send_to_graphite)
         super().run()
 
@@ -67,7 +67,7 @@ class LAgent(FructosaD):
         while True:
             value = await self._sensors_queue.get()
             self.logger.debug(PROTO_MEASUREMENT_MSG.format(value))
-            await self._to_master_queue.put(pickle.dumps(value))
+            await self._to_graphite_queue.put(pickle.dumps(value))
 
     async def heartbeating(self):
         host = self._conf.lmaster[LMASTER_HOST_KEY]

@@ -115,29 +115,34 @@ class LAgentTestCase(LAgentBase, unittest.TestCase):
             self.simple_instance.run()
             psubmit_task.assert_has_calls(expected_calls, any_order=True)
 
-    # @patch("fructosa.lagent.LAgent.report_data")
-    # @patch("fructosa.lagent.FructosaD.run")
-    # @patch("fructosa.lagent.LAgent.submit_task")
-    # def test_run_calls_submit_task_with_report_data(self, psubmit_task, prun, report_data):
-    #     mocked_sensors = PropertyMock()
-    #     type(self.simple_instance).sensors = mocked_sensors
-    #     self.simple_instance.run()
-    #     psubmit_task.assert_has_calls([call(self.simple_instance.report_data)])
-        
     @patch("fructosa.lagent.LAgent.heartbeating")
+    @patch("fructosa.lagent.LAgent.report_data")
     @patch("fructosa.lagent.FructosaD.run")
     @patch("fructosa.lagent.LAgent.submit_task")
-    def test_run_calls_submit_task_with_heartbeating(self, psubmit_task, prun, hb):
+    def test_run_calls_submit_task_with_report_data(
+            self, psubmit_task, prun, report_data, hb):
+        mocked_sensors = PropertyMock()
+        type(self.simple_instance).sensors = mocked_sensors
+        self.simple_instance.run()
+        psubmit_task.assert_has_calls([call(self.simple_instance.report_data)])
+        
+    @patch("fructosa.lagent.LAgent.heartbeating")
+    @patch("fructosa.lagent.LAgent.report_data")
+    @patch("fructosa.lagent.FructosaD.run")
+    @patch("fructosa.lagent.LAgent.submit_task")
+    def test_run_calls_submit_task_with_heartbeating(
+            self, psubmit_task, prun, report_data, hb):
         mocked_sensors = PropertyMock()
         type(self.simple_instance).sensors = mocked_sensors
         self.simple_instance.run()
         psubmit_task.assert_has_calls([call(self.simple_instance.heartbeating)])
-        
+
+    @patch("fructosa.lagent.LAgent.heartbeating")
     @patch("fructosa.lagent.FructosaD._send_to_graphite")
     @patch("fructosa.lagent.FructosaD.run")
     @patch("fructosa.lagent.LAgent.submit_task")
     def test_run_calls_submit_task_with_send_to_graphite(
-            self, psubmit_task, prun, psend_to_graphite):
+            self, psubmit_task, prun, psend_to_graphite, hb):
         mocked_sensors = PropertyMock()
         type(self.simple_instance).sensors = mocked_sensors
         self.simple_instance.run()
@@ -167,21 +172,21 @@ class LAgentTestCase(LAgentBase, unittest.TestCase):
     def test_report_data_awaits_in_queue_get_and_out_queue_put(self, dumps):
         import pickle
         self.simple_instance._sensors_queue = MagicMock()
-        self.simple_instance._to_master_queue = MagicMock()
+        self.simple_instance._to_graphite_queue = MagicMock()
         for num in 4,1,3:
             values = [MagicMock() for _ in range(num)] + [InventedException()]
             dumped_values = [MagicMock() for _ in range(num)] + [InventedException()]
             dumps.side_effect = dumped_values[:-1]
             self.simple_instance._sensors_queue.get = AsyncioMock(side_effect=values)
-            self.simple_instance._to_master_queue.put = AsyncioMock()
+            self.simple_instance._to_graphite_queue.put = AsyncioMock()
             expected_calls_get = [call() for value in values[:-1]]
             expected_calls_put = [call(value) for value in dumped_values[:-1]]
             with self.assertRaises(InventedException):
                 asyncio_run(self.simple_instance.report_data())
             self.simple_instance._sensors_queue.get.mock.assert_has_calls(expected_calls_get)
-            self.simple_instance._to_master_queue.put.mock.assert_has_calls(expected_calls_put)
+            self.simple_instance._to_graphite_queue.put.mock.assert_has_calls(expected_calls_put)
             self.simple_instance._sensors_queue.get.mock.reset_mock()
-            self.simple_instance._to_master_queue.put.mock.reset_mock()
+            self.simple_instance._to_graphite_queue.put.mock.reset_mock()
 
     @patch("fructosa.lagent.pickle.dumps")
     def test_report_data_logs_data_from_queue(self, dumps):
@@ -197,7 +202,7 @@ class LAgentTestCase(LAgentBase, unittest.TestCase):
             in_queue.get = AsyncioMock(side_effect=values)
             out_queue.put = AsyncioMock()
             self.simple_instance._sensors_queue = in_queue
-            self.simple_instance._to_master_queue = out_queue
+            self.simple_instance._to_graphite_queue = out_queue
             expected_calls = [
                 call(PROTO_MEASUREMENT_MSG.format(value)) for value in values[:-1]
             ]
