@@ -84,15 +84,11 @@ Usage
    A configuration file is needed. By default the configuration file is
    ``/etc/fructosa/lmaster.conf`` but that can be changed from the command line.
 
-   A typical configuration might be: ::
+   A typical configuration might be::
 
       [lmaster]
       host = localhost
       incoming data port = 7888
-      
-      [Graphite]
-      host = localhost
-      carbon receiver pickle port = 2004
       
       [logging]
       filename = /tmp/limon.log
@@ -103,7 +99,7 @@ Usage
    No option is mandatory. In the file ``fructosa/constants.py`` the defaults are defined.
    
 5. Start ``lagent`` on one or several computers (again, see the output of ``lagent -h``,
-   for more details): ::
+   for more details)::
 
       # lagent start
 
@@ -111,11 +107,15 @@ Usage
    ``/etc/fructosa/lagent.conf``, but can be changed from the command line.
    In this configuration file is where the needed *sensor*\ s are activated.
    A typical configuration with the master and the agent running locally
-   looks like this: ::
+   looks like this::
       
       [lmaster]
       host = localhost
       incoming data port = 7888
+
+      [Graphite]
+      host = localhost
+      carbon receiver pickle port = 2004
       
       [logging]
       filename = /tmp/limon.log

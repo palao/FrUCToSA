@@ -5,8 +5,8 @@ What changes are included in each version
 0.3.0
 =====
 
-* [0.2.1] Heartbeat mechanism implemented in ``LAgent``; basis for ``LMaster`` too.
-* [0.2.2] Heartbeat mechanism implemented in ``LMaster``.
+* Heartbeat mechanism implemented in ``LAgent`` (source) and ``LMaster`` (sink).
+* Data from sensors is now directly sent to ``Graphite`` from ``lagent``.
 
   
 0.2.0

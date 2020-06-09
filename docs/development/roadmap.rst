@@ -2,16 +2,16 @@
 Roadmap
 *******
 
-0.2.0
-=====
+0.2.0 [done]
+============
 
 * [R08.1] Grafana dashboards for nodes
 * Initial structure for docs
 * Started using sphinx
   
   
-0.3.0
-=====
+0.3.0 [done]
+============
 
 * [R11] Architecture's revamp I
 
