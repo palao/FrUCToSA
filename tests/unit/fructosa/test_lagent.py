@@ -96,29 +96,11 @@ class LAgentTestCase(LAgentBase, unittest.TestCase):
         instance._conf = self.mocked_conf
         self.assertEqual(instance.sensors, sensors)
 
-    @patch("fructosa.lagent.asyncio.Queue")
-    def test_init_created_queues(self, pQueue):
-        #queue = MagicMock()
-        #pQueue.return_value = queue
-        conf = self.mocked_conf
-        expected_calls = [call(), call()]
-        instance = self.test_class(conf)
-        pQueue.assert_has_calls(expected_calls)
-
-    @patch("fructosa.lagent.asyncio.Queue")
-    def test_init_created_sensors_queue_and_to_master_queue(self, pQueue):
-        sensors_queue = MagicMock()
-        to_master_queue = MagicMock()
-        pQueue.side_effect = [sensors_queue, to_master_queue]
-        instance = self.test_class(self.mocked_conf)
-        self.assertEqual(instance._sensors_queue, sensors_queue)
-        self.assertEqual(instance._to_master_queue, to_master_queue)
-
-    @patch("fructosa.lagent.FructosaD.__init__")
-    def test_init_calls_super_init(self, pinit):
-        conf = MagicMock()
-        instance = self.test_class(conf)
-        pinit.assert_called_once_with(conf)
+    # @patch("fructosa.lagent.FructosaD.__init__")
+    # def test_init_calls_super_init(self, pinit):
+    #     conf = MagicMock()
+    #     instance = self.test_class(conf)
+    #     pinit.assert_called_once_with(conf)
         
     @patch("fructosa.lagent.FructosaD.run")
     @patch("fructosa.lagent.LAgent.submit_task")
@@ -151,14 +133,17 @@ class LAgentTestCase(LAgentBase, unittest.TestCase):
         self.simple_instance.run()
         psubmit_task.assert_has_calls([call(self.simple_instance.heartbeating)])
         
-    @patch("fructosa.lagent.LAgent.send_to_master")
+    @patch("fructosa.lagent.FructosaD._send_to_graphite")
     @patch("fructosa.lagent.FructosaD.run")
     @patch("fructosa.lagent.LAgent.submit_task")
-    def test_run_calls_submit_task_with_send_to_master(self, psubmit_task, prun, send_to_master):
+    def test_run_calls_submit_task_with_send_to_graphite(
+            self, psubmit_task, prun, psend_to_graphite):
         mocked_sensors = PropertyMock()
         type(self.simple_instance).sensors = mocked_sensors
         self.simple_instance.run()
-        psubmit_task.assert_has_calls([call(self.simple_instance.send_to_master)])
+        psubmit_task.assert_has_calls(
+            [call(self.simple_instance._send_to_graphite)]
+        )
         
     @patch("fructosa.lagent.FructosaD.run")
     @patch("fructosa.lagent.LAgent.submit_task")
@@ -345,6 +330,16 @@ class LAgentTestCase(LAgentBase, unittest.TestCase):
             for log_line in log.output:
                 self.assertNotIn(msg, log_line)
 
+    @patch("fructosa.lagent.FructosaD._create_queues")
+    @patch("fructosa.lagent.asyncio.Queue")
+    def test_create_queues_method_sets_needed_attributes(self, pQueue, pcreate_queues):
+        self.simple_instance._create_queues()
+        pQueue.assert_called_once_with()
+        self.assertEqual(
+            self.simple_instance._sensors_queue, pQueue.return_value
+        )
+        pcreate_queues.assert_called_once_with()
+        
 
 class LAgentHeartbeatTestCase(LAgentBase, unittest.TestCase):
     def test_heartbeating_is_a_coroutine(self):

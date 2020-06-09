@@ -28,16 +28,20 @@ import signal
 import time
 import asyncio
 
-from fructosa.daemon import daemonize
-from fructosa.logs import setup_logging
-from fructosa.constants import (
+from .daemon import daemonize
+from .logs import setup_logging
+from .constants import (
     PROTO_STARTING_PROGRAM_MSG, PROTO_STOPPED_PROGRAM_MSG, PROTO_CANT_STOP_MSG,
     START_STOP_ERROR, NOT_RUNNING_MESSAGE, FRUCTOSAD_PROGRAM, PIDFILE_NOT_FOUND,
     PROTO_NO_PERMISSION_PIDFILE, PIDFILE_ACTION_CREATED, PIDFILE_ACTION_ACCESSED,
-    INVALID_PID, PROCESS_DOES_NOT_EXIST, 
+    INVALID_PID, PROCESS_DOES_NOT_EXIST, TO_GRAPHITE_CONNECTING_MSG,
+    TO_GRAPHITE_RETRY_MSG, TO_GRAPHITE_CONNECTED_MSG, 
+    GRAPHITE_HOST_KEY, GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY,
+    PROTO_MSG_TO_GRAPHITE,
 )
-from fructosa.maind import generic_main
-from fructosa.conf import ACTION_STR, PIDFILE_STR, FructosaDConf
+from .maind import generic_main
+from .conf import ACTION_STR, PIDFILE_STR, FructosaDConf
+from .lmessage import LMessage, LMessageError
 
 #from fructosa.messages.fructosad import (STARTING, STARTING_SERVER)
 
@@ -59,6 +63,7 @@ class FructosaD:
             logger_name=self.__class__.__name__, rotatingfile_conf=self._conf.logging
         )
         self._event_loop = asyncio.get_event_loop()
+        self._create_queues()
         
     def __call__(self):
         # note: need to be careful here: to only allow the execution of certain methods
@@ -137,6 +142,44 @@ class FructosaD:
         #     )
         #     raise SystemExit(START_STOP_ERROR)
         
+    async def _send_to_graphite(self):
+        # This should be refactored: 1) create connection, and 2) write data
+        host = self._conf.graphite[GRAPHITE_HOST_KEY]
+        port = self._conf.graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY]
+        msg = TO_GRAPHITE_CONNECTING_MSG.format(
+            host_key=GRAPHITE_HOST_KEY, host=host,
+            port_key=GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY, port=port,
+        )
+        self.logger.info(msg)
+        while True:
+            try:
+                reader, writer = await asyncio.open_connection(
+                    host, port, loop=self._event_loop
+                )
+            except ConnectionRefusedError:
+                self.logger.info(TO_GRAPHITE_RETRY_MSG.format(host=host))
+                await asyncio.sleep(1)
+            #except OSError:
+            # if graphite is not there, OSError can happen
+            #    self.logger.error("OSError")
+            else:
+                self.logger.info(TO_GRAPHITE_CONNECTED_MSG)
+                break
+        while True:
+            raw_message = await self._to_graphite_queue.get()
+            self.logger.debug(PROTO_MSG_TO_GRAPHITE.format(raw_message))
+            try:
+                message = LMessage(raw_message).to_graphite()
+            except LMessageError as e:
+                self.logger.error(e)
+            else:
+            #try:#This requires a FT -> killing Graphite while the system runs, and maybe restarting it
+                writer.write(message)
+            #except graphite is not there: (maybe it crashed)
+            # 1. log (connection to graphite lost),
+            # 2. submit task again (self.submit_task(self._send_to_graphite))
+            # 3. and exit
+
     def run(self):
         self._run_loop()
 
@@ -152,7 +195,10 @@ class FructosaD:
     def submit_task(self, task, *args, **kwargs):
         self._event_loop.create_task(task(*args, **kwargs))
 
-        
+    def _create_queues(self):
+        self._to_graphite_queue = asyncio.Queue()
+
+
 def main():
     #return generic_main(FructosaDConf, FructosaD)#return
     generic_main(FructosaDConf, FructosaD)

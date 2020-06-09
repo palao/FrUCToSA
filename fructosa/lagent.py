@@ -47,10 +47,9 @@ class LAgent(FructosaD):
     _stopped_message = LAGENT_STOP_MESSAGE
     _cant_stop_message = LAGENT_CANT_STOP_MESSAGE
 
-    def __init__(self, conf):
-        super().__init__(conf)
+    def _create_queues(self):
+        super()._create_queues()
         self._sensors_queue = asyncio.Queue()
-        self._to_master_queue = asyncio.Queue()
         
     @property
     def sensors(self):
@@ -61,7 +60,7 @@ class LAgent(FructosaD):
         for sensor in self.sensors:
             self.submit_task(sensor, self._sensors_queue)
         self.submit_task(self.report_data)
-        self.submit_task(self.send_to_master)
+        self.submit_task(self._send_to_graphite)
         super().run()
 
     async def report_data(self):
