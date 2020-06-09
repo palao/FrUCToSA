@@ -451,17 +451,29 @@ class LAgentConfTestCase(LAgentConfTestCaseBase):
         with self.assertRaises(KeyError):
             self.empty_init_instance.default_values[ACTION_STR]
 
+    @patch("fructosa.conf.LAgentConf._graphite_from_config_file")
     @patch("fructosa.conf.FructosaDConf._post_process_configuration")
     @patch("fructosa.conf.LAgentConf._sensors_from_config_file_sections")
     def test_post_process_configuration_calls_sensors_from_config_file_sections(
-            self, psensors_from_config_file_sections, ppost_process_configuration):
+            self, psensors_from_config_file_sections,
+            ppost_process_configuration, pgraphite_from_config_file):
         self.empty_init_instance._post_process_configuration()
         psensors_from_config_file_sections.assert_called_once_with()
 
     @patch("fructosa.conf.FructosaDConf._post_process_configuration")
+    @patch("fructosa.conf.LAgentConf._graphite_from_config_file")
+    @patch("fructosa.conf.LAgentConf._sensors_from_config_file_sections")
+    def test_post_process_configuration_calls_graphite_from_config_file(
+            self, psensors_from_config_file_sections,
+            pgraphite_from_config_file, ppost_process_configuration):
+        self.empty_init_instance._post_process_configuration()
+        pgraphite_from_config_file.assert_called_once_with()
+
+    @patch("fructosa.conf.LAgentConf._graphite_from_config_file")
+    @patch("fructosa.conf.FructosaDConf._post_process_configuration")
     @patch("fructosa.conf.LAgentConf._sensors_from_config_file_sections")
     def test_post_process_configuration_calls_same_method_in_FructosaDConf(
-            self, psensors_from_config_file_sections,
+            self, psensors_from_config_file_sections, pgraphite_from_config_file,
             ppost_process_configuration):
         self.empty_init_instance._post_process_configuration()
         ppost_process_configuration.assert_called_once_with()
@@ -561,6 +573,54 @@ class LAgentConf_sensors_from_config_file_sectionsTestCase(LAgentConfTestCaseBas
         self.empty_init_instance._sensors_from_config_file_sections()
         self.assertSetEqual(set(self.empty_init_instance.sensors), set(sensors))
 
+    def test_graphite_from_config_file_sets_graphite_attribute(self):
+        with self.assertRaises(AttributeError):
+            self.empty_init_instance.graphite
+        self.empty_init_instance._config_file_conf = MagicMock()
+        self.empty_init_instance._graphite_from_config_file()
+        self.empty_init_instance.graphite
+
+    def test_graphite_from_config_file_returns_defaults_if_missing_section(self):
+        self.empty_init_instance._config_file_conf = {}
+        self.empty_init_instance._graphite_from_config_file()
+        graphite = self.empty_init_instance.graphite
+        self.assertEqual(graphite[GRAPHITE_HOST_KEY], GRAPHITE_HOST)
+        self.assertEqual(
+            graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY],
+            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT
+        )
+
+    def test_graphite_from_config_file_give_priority_to_file_over_defaults_in_section(
+            self):
+        test_conf = {
+            GRAPHITE_HOST_KEY: "winnipoj",
+            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY: 23452
+        }
+        self.empty_init_instance._config_file_conf = {GRAPHITE_SECTION: test_conf}
+        self.empty_init_instance._graphite_from_config_file()
+        graphite = self.empty_init_instance.graphite
+        self.assertEqual(graphite[GRAPHITE_HOST_KEY], "winnipoj")
+        self.assertEqual(graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY], 23452)
+
+    def test_graphite_from_config_file_host_has_priority_over_default_in_graphite_section(self):
+        test_conf = {GRAPHITE_HOST_KEY: "winnipeg"}
+        self.empty_init_instance._config_file_conf = {GRAPHITE_SECTION: test_conf}
+        self.empty_init_instance._graphite_from_config_file()
+        graphite = self.empty_init_instance.graphite
+        self.assertEqual(graphite[GRAPHITE_HOST_KEY], "winnipeg")
+        self.assertEqual(
+            graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY],
+            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT
+        )
+
+    def test_graphite_from_config_file_port_has_priority_over_default_in_graphite_section(self):
+        test_conf = {GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY: 54545}
+        self.empty_init_instance._config_file_conf = {GRAPHITE_SECTION: test_conf}
+        self.empty_init_instance._graphite_from_config_file()
+        graphite = self.empty_init_instance.graphite
+        self.assertEqual(graphite[GRAPHITE_HOST_KEY], GRAPHITE_HOST)
+        self.assertEqual(graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY], 54545)
+        
     
 class LMasterConfTestCase(unittest.TestCase):
     @patch("fructosa.conf.LMasterConf._post_process_configuration")
@@ -600,66 +660,11 @@ class LMasterConfTestCase(unittest.TestCase):
             self.empty_init_instance.default_values[ACTION_STR]
 
     @patch("fructosa.conf.FructosaDConf._post_process_configuration")
-    @patch("fructosa.conf.LMasterConf._graphite_from_config_file")
-    def test_post_process_configuration_calls_graphite_from_config_file(
-            self, pgraphite_from_config_file, ppost_process_configuration):
-        self.empty_init_instance._post_process_configuration()
-        pgraphite_from_config_file.assert_called_once_with()
-
-    @patch("fructosa.conf.LMasterConf._graphite_from_config_file")
-    @patch("fructosa.conf.FructosaDConf._post_process_configuration")
     def test_post_process_configuration_calls_same_method_in_FructosaDConf(
-            self, ppost_process_configuration, pgraphite_from_config_file):
+            self, ppost_process_configuration):
         self.empty_init_instance._post_process_configuration()
         ppost_process_configuration.assert_called_once_with()
 
-    def test_graphite_from_config_file_sets_graphite_attribute(self):
-        with self.assertRaises(AttributeError):
-            self.empty_init_instance.graphite
-        self.empty_init_instance._config_file_conf = MagicMock()
-        self.empty_init_instance._graphite_from_config_file()
-        self.empty_init_instance.graphite
-
-    def test_graphite_from_config_file_returns_defaults_if_missing_section(self):
-        self.empty_init_instance._config_file_conf = {}
-        self.empty_init_instance._graphite_from_config_file()
-        graphite = self.empty_init_instance.graphite
-        self.assertEqual(graphite[GRAPHITE_HOST_KEY], GRAPHITE_HOST)
-        self.assertEqual(
-            graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY],
-            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT
-        )
-
-    def test_graphite_from_config_file_give_priority_to_file_over_defaults_in_graphite_section(self):
-        test_conf = {
-            GRAPHITE_HOST_KEY: "winnipoj",
-            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY: 23452
-        }
-        self.empty_init_instance._config_file_conf = {GRAPHITE_SECTION: test_conf}
-        self.empty_init_instance._graphite_from_config_file()
-        graphite = self.empty_init_instance.graphite
-        self.assertEqual(graphite[GRAPHITE_HOST_KEY], "winnipoj")
-        self.assertEqual(graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY], 23452)
-
-    def test_graphite_from_config_file_host_has_priority_over_default_in_graphite_section(self):
-        test_conf = {GRAPHITE_HOST_KEY: "winnipeg"}
-        self.empty_init_instance._config_file_conf = {GRAPHITE_SECTION: test_conf}
-        self.empty_init_instance._graphite_from_config_file()
-        graphite = self.empty_init_instance.graphite
-        self.assertEqual(graphite[GRAPHITE_HOST_KEY], "winnipeg")
-        self.assertEqual(
-            graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY],
-            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT
-        )
-
-    def test_graphite_from_config_file_port_has_priority_over_default_in_graphite_section(self):
-        test_conf = {GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY: 54545}
-        self.empty_init_instance._config_file_conf = {GRAPHITE_SECTION: test_conf}
-        self.empty_init_instance._graphite_from_config_file()
-        graphite = self.empty_init_instance.graphite
-        self.assertEqual(graphite[GRAPHITE_HOST_KEY], GRAPHITE_HOST)
-        self.assertEqual(graphite[GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY], 54545)
-        
 
 if __name__ == "__main__":
     unittest.main()

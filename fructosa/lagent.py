@@ -59,7 +59,7 @@ class LAgent(FructosaD):
         self.submit_task(self.heartbeating)
         for sensor in self.sensors:
             self.submit_task(sensor, self._sensors_queue)
-        self.submit_task(self.report_data)
+        #self.submit_task(self.report_data)
         self.submit_task(self._send_to_graphite)
         super().run()
 

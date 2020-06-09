@@ -173,6 +173,17 @@ class LAgentConf(FructosaDConf):
     def _post_process_configuration(self):
         super()._post_process_configuration()
         self._sensors_from_config_file_sections()
+        self._graphite_from_config_file()
+        
+    def _graphite_from_config_file(self):
+        self.graphite = {
+            GRAPHITE_HOST_KEY: GRAPHITE_HOST,
+            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY: GRAPHITE_CARBON_RECEIVER_PICKLE_PORT,
+        }
+        try:
+            self.graphite.update(self._config_file_conf[GRAPHITE_SECTION])
+        except KeyError:
+            pass
 
     def _sensors_from_config_file_sections(self):
         # In the future, sensors should be a property, maybe dynamically generated
@@ -205,15 +216,4 @@ class LMasterConf(FructosaDConf):
 
     def _post_process_configuration(self):
         super()._post_process_configuration()
-        self._graphite_from_config_file()
-        
-    def _graphite_from_config_file(self):
-        self.graphite = {
-            GRAPHITE_HOST_KEY: GRAPHITE_HOST,
-            GRAPHITE_CARBON_RECEIVER_PICKLE_PORT_KEY: GRAPHITE_CARBON_RECEIVER_PICKLE_PORT,
-        }
-        try:
-            self.graphite.update(self._config_file_conf[GRAPHITE_SECTION])
-        except KeyError:
-            pass
     

@@ -115,14 +115,14 @@ class LAgentTestCase(LAgentBase, unittest.TestCase):
             self.simple_instance.run()
             psubmit_task.assert_has_calls(expected_calls, any_order=True)
 
-    @patch("fructosa.lagent.LAgent.report_data")
-    @patch("fructosa.lagent.FructosaD.run")
-    @patch("fructosa.lagent.LAgent.submit_task")
-    def test_run_calls_submit_task_with_report_data(self, psubmit_task, prun, report_data):
-        mocked_sensors = PropertyMock()
-        type(self.simple_instance).sensors = mocked_sensors
-        self.simple_instance.run()
-        psubmit_task.assert_has_calls([call(self.simple_instance.report_data)])
+    # @patch("fructosa.lagent.LAgent.report_data")
+    # @patch("fructosa.lagent.FructosaD.run")
+    # @patch("fructosa.lagent.LAgent.submit_task")
+    # def test_run_calls_submit_task_with_report_data(self, psubmit_task, prun, report_data):
+    #     mocked_sensors = PropertyMock()
+    #     type(self.simple_instance).sensors = mocked_sensors
+    #     self.simple_instance.run()
+    #     psubmit_task.assert_has_calls([call(self.simple_instance.report_data)])
         
     @patch("fructosa.lagent.LAgent.heartbeating")
     @patch("fructosa.lagent.FructosaD.run")
