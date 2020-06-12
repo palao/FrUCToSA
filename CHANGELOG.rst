@@ -1,11 +1,15 @@
-*****************************************
-What changes are included in each version
-*****************************************
+*********
+Changelog
+*********
+
+What *high level* changes are included in each published version.
+
 
 0.3.0
 =====
 
-* Heartbeat mechanism implemented in ``LAgent`` (source) and ``LMaster`` (sink).
+* Heartbeat mechanism implemented: ``lagent`` is the source and ``lmaster``
+  the sink.
 * Data from sensors is now directly sent to ``Graphite`` from ``lagent``.
 
   
