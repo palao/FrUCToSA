@@ -18,6 +18,7 @@ Welcome to FrUCToSA's documentation!
    development/requirements
    development/roadmap
    development/architecture
+   development/OpenRC
 
    CHANGELOG
 
