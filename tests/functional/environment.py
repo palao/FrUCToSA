@@ -201,8 +201,17 @@ class FTEnvironment:
     def link_logfiles(self):
         return self.env_type.link_logfiles(self)
     
-    def __call__(self, *commands):
+    def __call__(self, *commands, hostnames=None):
+        """Parameters:
+        commands: iterable of tests.common.program.ProgramWrapper instances
+        hostnames: the names to be assigned as the environment's hostnames 
+            (for now only used by docker). If given and not None (or empty), 
+            it should be interpreted as an iterable of names. (What happens
+            if some is missing depends on the implementation.) These names
+            will be used as the hostnames for each container.
+        """
         self.commands = commands
+        self.hostnames = hostnames
         return self
 
     @property
@@ -295,10 +304,11 @@ class DockerFTEnvironmentType(FTEnvironmentType):
     def __enter__(env):
         # create docker-compose.yml
         commands = env.commands
+        hostnames = env.hostnames
         blocks = [DOCKER_COMPOSE_COMMON]
         if env.with_graphite:
             blocks.append(DOCKER_COMPOSE_GRAPHITE_SERVICE)
-        for command in commands:
+        for icommand, command in enumerate(commands):
             command._piddir = env.pid_dir
             if command.test_conf and command.standard_conf:
                 conf_volume = DOCKER_COMPOSE_VOLUME.format(
@@ -327,7 +337,10 @@ class DockerFTEnvironmentType(FTEnvironmentType):
             name = command.name
             container = name
             service = name
-            hostname = name
+            try:
+                hostname = hostnames[icommand]
+            except (TypeError, IndexError):
+                hostname = name
             command.container = {"name": container, "service": service, "hostname": hostname}
             pip_user_flag = ""
             user_path = ""
