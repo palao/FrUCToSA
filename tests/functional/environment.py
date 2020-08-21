@@ -211,7 +211,14 @@ class FTEnvironment:
             will be used as the hostnames for each container.
         """
         self.commands = commands
-        self.hostnames = hostnames
+        self._hostnames = hostnames
+        self.hostnames_dict = {}
+        for icmd, cmd in enumerate(commands):
+            try:
+                host = hostnames[icmd]
+            except (TypeError, IndexError):
+                host = cmd.name
+            self.hostnames_dict[cmd] = host
         return self
 
     @property
@@ -337,10 +344,7 @@ class DockerFTEnvironmentType(FTEnvironmentType):
             name = command.name
             container = name
             service = name
-            try:
-                hostname = hostnames[icommand]
-            except (TypeError, IndexError):
-                hostname = name
+            hostname = self.hostnames_dict[icommand]
             command.container = {"name": container, "service": service, "hostname": hostname}
             pip_user_flag = ""
             user_path = ""
