@@ -60,6 +60,7 @@ This behaviour can be controlled with an environment varaible called ``FRUCTOSA_
   If unset, the location is inferred from the location of the ``environment.py`` file
   (which lives in ``tests/functional/``).
 
+
 How to run the Functional Tests (FTs)
 -------------------------------------
 
