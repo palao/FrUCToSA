@@ -211,14 +211,13 @@ class FTEnvironment:
             will be used as the hostnames for each container.
         """
         self.commands = commands
-        self._hostnames = hostnames
-        self.hostnames_dict = {}
+        self.hostnames = []
         for icmd, cmd in enumerate(commands):
             try:
                 host = hostnames[icmd]
             except (TypeError, IndexError):
                 host = cmd.name
-            self.hostnames_dict[cmd] = host
+            self.hostnames.append(host)
         return self
 
     @property
@@ -311,7 +310,6 @@ class DockerFTEnvironmentType(FTEnvironmentType):
     def __enter__(env):
         # create docker-compose.yml
         commands = env.commands
-        hostnames = env.hostnames
         blocks = [DOCKER_COMPOSE_COMMON]
         if env.with_graphite:
             blocks.append(DOCKER_COMPOSE_GRAPHITE_SERVICE)
@@ -344,7 +342,7 @@ class DockerFTEnvironmentType(FTEnvironmentType):
             name = command.name
             container = name
             service = name
-            hostname = self.hostnames_dict[icommand]
+            hostname = env.hostnames[icommand]
             command.container = {"name": container, "service": service, "hostname": hostname}
             pip_user_flag = ""
             user_path = ""

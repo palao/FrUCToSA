@@ -64,11 +64,13 @@ class BaseLAgent:
             "BootTime", "Users"
         ]
         if self.ft_env.name == DOCKER_FT_ENVIRONMENT:
-            #  I can do this because the name attribute will be used in DockerFTEnvironment.__enter__
-            # to set the hostname of the container
+            # The next part will only work if the name of the command is not repeated
+            # in the list. In particular it is valid for
+            # * ONE command
+            # * multiple commands with different names
             try:
                 icmd = self.ft_env.commands.index(self.program.name)
-                host = self.ft_env.hostnames_dict[icmd]
+                host = self.ft_env.hostnames[icmd]
             except (ValueError, IndexError):
                 host = self.program.name
         else:
@@ -112,7 +114,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         super().setUp()
 
     def _test_measurements_start_and_stop_controled_by_sensors_in_conf(
-            self, config_file_name):
+            self, config_file_name, hostnames=None):
         #  Therefore he prepares a a config file with some valid sensor sections
         # and some invalid ones:
         conf = self.prepare_config_from_file(config_file_name)
@@ -208,7 +210,15 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         self._test_measurements_start_and_stop_controled_by_sensors_in_conf(
             "lagent-test.3.conf"
         )
-        # And, it works! This tool seems suitable for his needs.
+        # And, it works! ... but one more thing ... he has been told that it is
+        # important that the hierarchy of names is preserved if the data from sensors
+        # in agents must arrive the Graphite backend. He tests it providing a
+        # customized hostname:
+        self._test_measurements_start_and_stop_controled_by_sensors_in_conf(
+            "lagent-test.1.conf", hostnames=("whathostisit",)
+        )
+        # again, it works! It's all fun and game with this application!
+        # This tool seems suitable for his needs.
 
     def test_measurements_start_and_stop_with_only_1_sensor_for_every_valid_sensor(self):
         #  Tux, systematic as he is, wants to convince himself that the program
