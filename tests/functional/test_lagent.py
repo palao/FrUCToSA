@@ -66,7 +66,11 @@ class BaseLAgent:
         if self.ft_env.name == DOCKER_FT_ENVIRONMENT:
             #  I can do this because the name attribute will be used in DockerFTEnvironment.__enter__
             # to set the hostname of the container
-            host = self.program.name
+            try:
+                icmd = self.ft_env.commands.index(self.program.name)
+                host = self.ft_env.hostnames_dict[icmd]
+            except (ValueError, IndexError):
+                host = self.program.name
         else:
             host = socket.gethostname()
             
