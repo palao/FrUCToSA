@@ -113,7 +113,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         self.program_default_configfile = LAGENT_DEFAULT_CONFIGFILE
         super().setUp()
 
-    def _test_measurements_start_and_stop_controled_by_sensors_in_conf(
+    def _test_measurements_start_and_stop_controlled_by_sensors_in_conf(
             self, config_file_name, hostnames=None):
         #  Therefore he prepares a a config file with some valid sensor sections
         # and some invalid ones:
@@ -184,6 +184,8 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             self.setup_logparser(target_strings=(measurement_mark,))
             self.wait_for_environment(wait_t)
             new_lines = self.tmplogparser.get_new_lines()
+            print("meassurement_mark:", measurement_mark)
+            print("new_lines:", new_lines)
             self.assertTrue(len(new_lines) > 0)
             for line in new_lines:
                 values = [k in line for k in self.sensors]
@@ -201,20 +203,20 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         #   He wants to check that the measurements correspond to the sensors that can be
         # found in the config file. The program starts and stops, and the sensors seem to
         # do the same.
-        self._test_measurements_start_and_stop_controled_by_sensors_in_conf(
+        self._test_measurements_start_and_stop_controlled_by_sensors_in_conf(
             "lagent-test.1.conf"
         )
         #  Now that he tested the program with a couple of sensors he wants to run it to
         # the full.
         # He runs the program now with a config file that contains a lot of sensors:
-        self._test_measurements_start_and_stop_controled_by_sensors_in_conf(
+        self._test_measurements_start_and_stop_controlled_by_sensors_in_conf(
             "lagent-test.3.conf"
         )
         # And, it works! ... but one more thing ... he has been told that it is
         # important that the hierarchy of names is preserved if the data from sensors
         # in agents must arrive the Graphite backend. He tests it providing a
         # customized hostname:
-        self._test_measurements_start_and_stop_controled_by_sensors_in_conf(
+        self._test_measurements_start_and_stop_controlled_by_sensors_in_conf(
             "lagent-test.1.conf", hostnames=("whathostisit",)
         )
         # again, it works! It's all fun and game with this application!
@@ -237,7 +239,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         # Then he runs the lagent program with each of them:
         for sensor in single_sensors:
             try:
-                self._test_measurements_start_and_stop_controled_by_sensors_in_conf(
+                self._test_measurements_start_and_stop_controlled_by_sensors_in_conf(
                     sensor
                 )
             except Exception as e:
@@ -250,7 +252,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         #  Tux has created another config file for {program} with some invalid sensors
         # in it; he wants to test that when the program starts, there is an error message
         # and of course, the program keeps running ignoring the invalid entries.
-        self._test_measurements_start_and_stop_controled_by_sensors_in_conf(
+        self._test_measurements_start_and_stop_controlled_by_sensors_in_conf(
             "lagent-test.2.conf"
         )
 
