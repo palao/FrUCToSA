@@ -111,6 +111,10 @@ class LAgent(FructosaD):
     #     # await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS) #  ?
 
     async def send_to_master(self):
+        """This coroutine is not used for now since the data are sent to 
+        Graphite directly.
+        It remains here in case it is used in the future (or a variation of it)
+        """
         host = self._conf.lmaster[LMASTER_HOST_KEY]
         port = self._conf.lmaster[LAGENT_TO_LMASTER_DATA_PORT_KEY]
         self.logger.info(
