@@ -296,8 +296,9 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
                 )
             # so he stops lagent with satisfaction.
 
+    @unittest.skip
     def test_keys_in_lmaster_section_are_read_and_reported(self):
-        #  Not that the basic checks have passed, Tux plans to run the system
+        #  Now that the basic checks have passed, Tux plans to run the system
         # in a small partition of the cluster.
         #  But before doing so, he needs to be sure that the host where the
         # lmaster program runs can be given in the configuration file of the
