@@ -184,8 +184,6 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             self.setup_logparser(target_strings=(measurement_mark,))
             self.wait_for_environment(wait_t)
             new_lines = self.tmplogparser.get_new_lines()
-            print("meassurement_mark:", measurement_mark)
-            print("new_lines:", new_lines)
             self.assertTrue(len(new_lines) > 0)
             for line in new_lines:
                 values = [k in line for k in self.sensors]
