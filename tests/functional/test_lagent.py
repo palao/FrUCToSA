@@ -255,18 +255,22 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         )
 
     def _test_lmaster_section_of_config_file(
-            self, conf_file, host, port_data, port_hb, test_hb=False):
+            self, conf_file, host, port_hb, port_data=None, test_hb=False):
+        """the 'port_data' param set to != None triggers some additional 
+        checks: it means that the sending of data between agents and master 
+        is enabled."""
         hb_start = HEARTBEAT_START_SENDING_MSG_TEMPLATE.format(
             master=host,
             hb_port=port_hb)
         hb_msg_0 = HEARTBEAT_SEND_MSG_TEMPLATE.format(message_number=0)
-        trying_to_connect_msg = LAGENT_TO_LMASTER_CONNECTING_MSG.format(
-            host_key=LMASTER_HOST_KEY, host=host,
-            port_key=LAGENT_TO_LMASTER_DATA_PORT_KEY, port=port_data,
-        )
-        self.setup_logparser(
-            target_strings=(trying_to_connect_msg, hb_start, hb_msg_0)
-        )
+        target_strings = [hb_start, hb_msg_0]
+        if port_data:
+            trying_to_connect_msg = LAGENT_TO_LMASTER_CONNECTING_MSG.format(
+                host_key=LMASTER_HOST_KEY, host=host,
+                port_key=LAGENT_TO_LMASTER_DATA_PORT_KEY, port=port_data,
+            )
+            target_strings.append(trying_to_connect_msg)
+        self.setup_logparser(target_strings=tuple(target_strings))
         #old_lines = self.tmplogparser.get_new_lines()
         old_lines_summary = self.tmplogparser._line_counting_history[-1]
         # and, he launches lagent:
@@ -278,10 +282,11 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             new_lines_summary = self.tmplogparser._line_counting_history[-1]
             #  He finds in the logs a message claiming that the program is trying to
             # connect with lmaster:
-            self.assertEqual(
-                old_lines_summary[1][trying_to_connect_msg]+1,
-                new_lines_summary[1][trying_to_connect_msg]
-            )
+            if port_data:
+                self.assertEqual(
+                    old_lines_summary[1][trying_to_connect_msg]+1,
+                    new_lines_summary[1][trying_to_connect_msg]
+                )
             #  He also finds that the program announces that heartbeat data
             # to will be sent to lmaster
             self.assertEqual(
@@ -296,8 +301,59 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
                 )
             # so he stops lagent with satisfaction.
 
-    @unittest.skip
     def test_keys_in_lmaster_section_are_read_and_reported(self):
+        #  Now that the basic checks have passed, Tux plans to run the system
+        # in a small partition of the cluster.
+        #  But before doing so, he needs to be sure that the host where the
+        # lmaster program runs can be given in the configuration file of the
+        # lagent program (obviously, the default localhost is not very useful).
+        #  So Tux prepares a conf file for lagent with customized "host" key in
+        # the "lmaster" section:
+        hb_port = HEARTBEAT_PORT
+        conf_file = "lagent-test.6.conf"
+        conf = self.prepare_config_from_file(conf_file)
+        host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, hb_port#, test_hb=True ## this must be commented out
+        )                                           ## because the hostname in this
+        #                                           ## test is not real
+        #  Of course, since "zurraspeador" is not a valid hostname. He chooses
+        # to test with a name now:
+        conf_file = "lagent-test.8.conf"
+        conf = self.prepare_config_from_file(conf_file)
+        host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, hb_port, test_hb=True
+        )
+        # ...but wait, wait. He wonders what happens if there is no lmaster section
+        conf_file = "lagent-test.empty.conf"
+        conf = self.prepare_config_from_file(conf_file)
+        host = LMASTER_HOST
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, hb_port, test_hb=True
+        )
+        # ...or if the section is empty
+        conf_file = "lagent-test.5.conf"
+        conf = self.prepare_config_from_file(conf_file)
+        self._test_lmaster_section_of_config_file(
+            conf_file, host, hb_port, test_hb=True
+        )
+        # He has to admit that the program seems to be passing all the checks and looks
+        # ready for production!
+
+    @unittest.skip
+    def test_keys_in_lmaster_section_are_read_and_reported_agents_send_to_master(self):
+        ####################################################################
+        ###  This test is marked with *skip* because it is 
+        ### wrong **if data from agents is not sent to master**.
+        ###
+        ###  This situation might change in the future if agents will send
+        ### data to master again, which can easily happen. In that event
+        ### the test should be re-introduced, with deemed modifications.
+        ###
+        ###  As of today the agents send the data to Graphite.
+        ###  (DPalao -- 26ago2020)
+        ####################################################################
         #  Now that the basic checks have passed, Tux plans to run the system
         # in a small partition of the cluster.
         #  But before doing so, he needs to be sure that the host where the
@@ -310,38 +366,38 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
         port_data = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
         hb_port = HEARTBEAT_PORT
-        self._test_lmaster_section_of_config_file(
-            conf_file, host, port_data, hb_port
+        self._test_lmaster_section_of_config_file_agents_send_to_master(
+            conf_file, host, hb_port, port_data, test_hb=True
         )
         # ...but wait, wait. He wonders what happens if there is no lmaster section
         conf_file = "lagent-test.empty.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = LMASTER_HOST
         port_data = LAGENT_TO_LMASTER_DATA_PORT
-        self._test_lmaster_section_of_config_file(
-            conf_file, host, port_data, hb_port, test_hb=True
+        self._test_lmaster_section_of_config_file_agents_send_to_master(
+            conf_file, host, hb_port, port_data, test_hb=True
         )
         # ...or if the section is empty
         conf_file = "lagent-test.5.conf"
         conf = self.prepare_config_from_file(conf_file)
-        self._test_lmaster_section_of_config_file(
-            conf_file, host, port_data, hb_port, test_hb=True
+        self._test_lmaster_section_of_config_file_agents_send_to_master(
+            conf_file, host, hb_port, port_data, test_hb=True
         )
         # ...or it has only one key (the host)
         conf_file = "lagent-test.6.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
         port_data = LAGENT_TO_LMASTER_DATA_PORT
-        self._test_lmaster_section_of_config_file(
-            conf_file, host, port_data, hb_port
+        self._test_lmaster_section_of_config_file_agents_send_to_master(
+            conf_file, host, hb_port, port_data, test_hb=True
         )
         # ...or only the port is given
         conf_file = "lagent-test.7.conf"
         conf = self.prepare_config_from_file(conf_file)
         host = LMASTER_HOST
         port_data = conf[LMASTER_PROGRAM][LAGENT_TO_LMASTER_DATA_PORT_KEY]
-        self._test_lmaster_section_of_config_file(
-            conf_file, host, port_data, hb_port, test_hb=True
+        self._test_lmaster_section_of_config_file_agents_send_to_master(
+            conf_file, host, hb_port, port_data, test_hb=True
         )
         # He has to admit that the program seems to be passing all the checks and looks
         # it is ready for production!
