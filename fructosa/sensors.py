@@ -90,7 +90,7 @@ class Sensor:
         try:
             host = self._host
         except AttributeError:
-            host = gethostname()
+            host = gethostname().split(".")[0]
             self._host = host
         return host
         

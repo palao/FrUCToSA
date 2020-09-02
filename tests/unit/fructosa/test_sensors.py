@@ -260,7 +260,13 @@ class SensorTestCase(SensorTestCaseBase):
         self.instance.name
         self.mocked_name.assert_called_once_with()
 
-        
+    def test_host_cutoffs_hostname_after_first_dot(self):
+        del self.instance._host
+        with patch("fructosa.sensors.gethostname") as pgethostname:
+            pgethostname.return_value = self.host
+            self.assertEqual(self.instance.host, self.host.split(".")[0])
+
+
 class PeriodicSensorTestCase(SensorTestCaseBase):
     def setUp(self):
         from fructosa.sensors import PeriodicSensor
