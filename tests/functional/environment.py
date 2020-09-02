@@ -206,9 +206,10 @@ class FTEnvironment:
         commands: iterable of tests.common.program.ProgramWrapper instances
         hostnames: the names to be assigned as the environment's hostnames 
             (for now only used by docker). If given and not None (or empty), 
-            it should be interpreted as an iterable of names. (What happens
-            if some is missing depends on the implementation.) These names
-            will be used as the hostnames for each container.
+            it should be interpreted as an iterable of names. What happens
+            if some is missing depends on the implementation (i.e. the 
+            particular subclass of FTEnvironmentType).
+            These names will be used as the hostnames for each container.
         """
         self.commands = commands
         self.hostnames = []

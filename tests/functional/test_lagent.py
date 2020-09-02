@@ -130,7 +130,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         # and, again, he launches the program:
         self.program.args = ("start",)
         programs = (self.program,)
-        with self.ft_env(*programs):  # as start_command:
+        with self.ft_env(*programs, hostnames=hostnames):  # as start_command:
             # he gives some time to the logging system to write the data in the logs:
             self.wait_for_environment(2)
             new_lines = self.tmplogparser.get_new_lines()
@@ -165,7 +165,9 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
                 self.assertTrue(reduce(lambda x, y: x or y, values))
                 # self.assertIn("CPUPercent", line)
                 self.assertIn("DEBUG", line)
-                self.assertIn(self.program.hostname, line)
+                if "." in self.program.hostname:
+                    self.assertNotIn(self.program.hostname, line)
+                self.assertIn(self.program.hostname.split(".")[0], line)
                 measurement = line[
                     line.find(measurement_mark)+len(measurement_mark):].strip()
                 # he finds very nice that the results of the measurements are eval-able:
@@ -191,7 +193,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         # in agents must arrive the Graphite backend. He tests it providing a
         # customized hostname:
         self._test_measurements_start_and_stop_controlled_by_sensors_in_conf(
-            "lagent-test.1.conf", hostnames=("whathostisit",)
+            "lagent-test.1.conf", hostnames=("whathost.is.it",)
         )
         # again, it works! It's all fun and game with this application!
         # This tool seems suitable for his needs.
