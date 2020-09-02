@@ -68,7 +68,11 @@ In ``devel`` there are some dockerfiles that can be used to create the images
 needed to run the FTs inside containers. For instance::
 
   $ cd devel/
-  $ docker build --tag fructosa-py37:auto --tag fructosa-py37:latest -f FrUCToSA-dev-py37.df .
+  $ docker build --tag fructosa:py37 -f FrUCToSA-dev-py37.df .
+
+optionally one could set additional tags::
+  
+  $ docker build --tag fructosa:py37 --tag fructosa:auto --tag fructosa:latest -f FrUCToSA-dev-py37.df .
 
 With that, the FTs should run smothly (hopefully!) with::
 
@@ -77,7 +81,62 @@ With that, the FTs should run smothly (hopefully!) with::
 Or with::
 
   $ tox
+  $ # or
+  $ tox -e py37-functional
 
+  
+Unit Tests
+==========
+
+Each line of actual production code is expected to be covered by unit tests.
+
+
+How to run the Unit Tests (UTs)
+-------------------------------
+
+The unit tests can be run with::
+
+  (python-3.7) $ pytest tests/unit
+
+or with::
+
+  $ tox -e py37-unit
+  
+
+Doctests
+========
+
+Straightforward UTs can be written in the docstring of the given unit. This serves
+two purposes:
+
+1. It simplifies UTs
+2. It serves as documentation, as docstrings are typically easier to read than
+   UTs
+
+How to run the Doctests
+-----------------------
+
+The doctests can be run with::
+
+  (python-3.7) $ pytest fructosa
+
+or with::
+
+  $ tox -e py37-doctest
+  
+
+
+
+How to run the Unit Tests (UTs)
+-------------------------------
+
+The unit tests can be run with::
+
+  (python-3.7) $ pytest tests/unit
+
+or with::
+
+  $ tox -e py37-unit
   
 
 ****************
@@ -85,9 +144,11 @@ Daemon processes
 ****************
 
 * typically accept command line options for
+
   * configuration file
   * logging file/directory
   * pidfile (?)
+    
 * general logging messages to a specific log file (like ``/var/log/fructosad.log``); errors
   go to syslog (``/var/log/syslog``) -- done anyway by the Linux logging system
 * Catch SIGHUP to allow re-reading of configuration
@@ -113,7 +174,8 @@ AsyncIO and unit tests
 
 A simple approach is described by Miguel Grinberg in his blog:
 https://blog.miguelgrinberg.com/post/unit-testing-asyncio-code
-I implemented my own version of his _run and AsyncMock in ``test/unit/fructosa/aio_tools.py``.
+I implemented my own version of his _run and AsyncMock in
+``test/unit/fructosa/aio_tools.py``.
 
 
 ************
