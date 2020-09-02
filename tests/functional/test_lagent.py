@@ -24,9 +24,7 @@
 import unittest
 import os
 import sys
-import time
 import socket
-import shutil
 from functools import reduce
 import glob
 
@@ -38,8 +36,8 @@ from tests.functional.environment import (
 
 from fructosa.constants import (
     LAGENT_DESCRIPTION, CONF_READ_MSG, LAGENT_DEFAULT_CONFIGFILE,
-    PROTO_SENSOR_STARTED_MSG, LAGENT_DEFAULT_CONFIGFILE, PROTO_MEASUREMENT_MSG,
-    PROTO_INVALID_SENSOR_MSG, LMASTER_PROGRAM, LMASTER_HOST, LMASTER_HOST_KEY,
+    PROTO_SENSOR_STARTED_MSG, PROTO_MEASUREMENT_MSG, PROTO_INVALID_SENSOR_MSG,
+    LMASTER_PROGRAM, LMASTER_HOST, LMASTER_HOST_KEY,
     LAGENT_TO_LMASTER_DATA_PORT, LAGENT_TO_LMASTER_DATA_PORT_KEY,
     LAGENT_TO_LMASTER_CONNECTING_MSG, HEARTBEAT_START_SENDING_MSG_TEMPLATE,
     HEARTBEAT_SEND_MSG_TEMPLATE, HEARTBEAT_PORT,
@@ -47,15 +45,13 @@ from fructosa.constants import (
 from fructosa.lagent import LAGENT_STARTING_MESSAGE, LAGENT_STOP_MESSAGE
 from fructosa.conf import LAGENT_DEFAULT_PIDFILE
 
-import fructosa
-
 
 class BaseLAgent:
     def prepare_sensors(self, conf):
         """It actually prepares some sensor related messages."""
         sensors = {}
         invalid_sensors = {}
-        #all_sensors = fructosa.sensors._find_all_sensors()
+        # all_sensors = fructosa.sensors._find_all_sensors()
         all_sensors = [
             "CPUPercent", "VirtualMemory", "CPUTimes", "CPUTimesPercent", "CPUCount",
             "CPUStats", "CPUFreq", "SwapMemory", "DiskPartitions", "DiskUsage",
@@ -75,7 +71,7 @@ class BaseLAgent:
                 host = self.program.name
         else:
             host = socket.gethostname()
-            
+
         for section in conf.sections():
             if section.startswith("sensor:"):
                 sensor = section[7:]
@@ -98,8 +94,8 @@ class BaseLAgent:
                         }
         self.invalid_sensors = invalid_sensors
         self.sensors = sensors
-        
-    
+
+
 class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase):
     def setUp(self):
         self.wrapper_class = LAgentWrapper
@@ -123,50 +119,29 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         # launching it:
         if self.ft_env.name == LOCALHOST_FT_ENVIRONMENT:
             #  I check only in a so-called local environment because inside a new
-            # container we don't need to check if the program runs: 
+            # container we don't need to check if the program runs:
             self.check_program_running(self.program)
 
-        sensor_start_msgs = tuple(v["start_msg"] for k,v in self.sensors.items())
+        sensor_start_msgs = tuple(v["start_msg"] for k, v in self.sensors.items())
         sensor_invalid_msgs = tuple(
-            v["error_msg"] for k,v in self.invalid_sensors.items()
+            v["error_msg"] for k, v in self.invalid_sensors.items()
         )
         self.setup_logparser(target_strings=sensor_start_msgs+sensor_invalid_msgs)
-        old_lines_summary = self.tmplogparser._line_counting_history[-1]
         # and, again, he launches the program:
         self.program.args = ("start",)
         programs = (self.program,)
-        with self.ft_env(*programs) as start_command:
+        with self.ft_env(*programs):  # as start_command:
             # he gives some time to the logging system to write the data in the logs:
             self.wait_for_environment(2)
             new_lines = self.tmplogparser.get_new_lines()
-            new_lines_summary = self.tmplogparser._line_counting_history[-1]
-            # he sees that a message saying that the sensor cpu_percent has started meassuring
-            # every 1s:
+            # # new_lines_summary = self.tmplogparser._line_counting_history[-1]
+            # he sees that a message saying that the sensor cpu_percent has started
+            # meassuring every 1s:
             for sensor_start_msg in sensor_start_msgs:
                 for line in new_lines:
                     if sensor_start_msg in line:
                         break
                 else:
-                    #program.stop()
-                    # print("-"*50)
-                    # print("log file:", self.ft_env.log_file_name)
-                    # with open(self.ft_env.log_file_name, "r") as f:
-                    #     for line in f:
-                    #         print(">", line)
-                    # print("Trying to find:")
-                    # print(sensor_start_msg)
-                    # print("...in:")
-                    # print("new lines:", new_lines)
-                    # print("Old lines (summary):", old_lines_summary)
-                    # print("conf:")
-                    # for section in conf.sections():
-                    #     print("[{}]".format(section))
-                    #     for k, v in conf.items(section):
-                    #         print("... {}: {}".format(k, v))
-                    # print("="*50)
-                    # with open(self.ft_env.log_file_name, "r") as f:
-                    #     for line in f:
-                    #         print(">>", line)
                     self.fail("'{}' not found in the logs".format(sensor_start_msg))
             # he also sees error messages about the sensors that do not exist:
             for invalid_sensor in self.invalid_sensors:
@@ -175,11 +150,11 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
                     if error_msg in line:
                         break
                 else:
-                    #program.stop()
+                    # program.stop()
                     self.fail("'{}' not found in the logs".format(error_msg))
-            # Now he waits some seconds to check that the measuraments are indeed correctly
-            # reported in the logs:
-            wait_t = 2.1*max([float(v["frequency"]) for k,v in self.sensors.items()])
+            #  Now he waits some seconds to check that the measuraments are indeed
+            # correctly reported in the logs:
+            wait_t = 2.1*max([float(v["frequency"]) for k, v in self.sensors.items()])
             measurement_mark = PROTO_MEASUREMENT_MSG.format("")
             self.setup_logparser(target_strings=(measurement_mark,))
             self.wait_for_environment(wait_t)
@@ -187,11 +162,12 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             self.assertTrue(len(new_lines) > 0)
             for line in new_lines:
                 values = [k in line for k in self.sensors]
-                self.assertTrue(reduce(lambda x,y: x or y, values))
-                #self.assertIn("CPUPercent", line)
+                self.assertTrue(reduce(lambda x, y: x or y, values))
+                # self.assertIn("CPUPercent", line)
                 self.assertIn("DEBUG", line)
                 self.assertIn(self.program.hostname, line)
-                measurement = line[line.find(measurement_mark)+len(measurement_mark):].strip()
+                measurement = line[
+                    line.find(measurement_mark)+len(measurement_mark):].strip()
                 # he finds very nice that the results of the measurements are eval-able:
                 eval(measurement)
             # now he stops the program. # implicitly done in __exit__
@@ -240,11 +216,11 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
                 self._test_measurements_start_and_stop_controlled_by_sensors_in_conf(
                     sensor
                 )
-            except Exception as e:
-                print(sensor,"failed", file=sys.stderr)
+            except Exception:
+                print(sensor, "failed", file=sys.stderr)
                 raise
             else:
-                print(sensor,"OK", file=sys.stderr)
+                print(sensor, "OK", file=sys.stderr)
 
     def test_behaviour_if_invalid_sensors_in_conf(self):
         #  Tux has created another config file for {program} with some invalid sensors
@@ -256,8 +232,8 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
 
     def _test_lmaster_section_of_config_file(
             self, conf_file, host, port_hb, port_data=None, test_hb=False):
-        """the 'port_data' param set to != None triggers some additional 
-        checks: it means that the sending of data between agents and master 
+        """the 'port_data' param set to != None triggers some additional
+        checks: it means that the sending of data between agents and master
         is enabled."""
         hb_start = HEARTBEAT_START_SENDING_MSG_TEMPLATE.format(
             master=host,
@@ -271,23 +247,23 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             )
             target_strings.append(trying_to_connect_msg)
         self.setup_logparser(target_strings=tuple(target_strings))
-        #old_lines = self.tmplogparser.get_new_lines()
+        # old_lines = self.tmplogparser.get_new_lines()
         old_lines_summary = self.tmplogparser._line_counting_history[-1]
         # and, he launches lagent:
         self.program.args = ("start",)
         programs = (self.program,)
-        with self.ft_env(*programs) as start_command:
+        with self.ft_env(*programs):  # as start_command:
             self.wait_for_environment(1)
-            new_lines = self.tmplogparser.get_new_lines()
+            # new_lines = self.tmplogparser.get_new_lines()
             new_lines_summary = self.tmplogparser._line_counting_history[-1]
-            #  He finds in the logs a message claiming that the program is trying to
+            # He finds in the logs a message claiming that the program is trying to
             # connect with lmaster:
             if port_data:
                 self.assertEqual(
                     old_lines_summary[1][trying_to_connect_msg]+1,
                     new_lines_summary[1][trying_to_connect_msg]
                 )
-            #  He also finds that the program announces that heartbeat data
+            # He also finds that the program announces that heartbeat data
             # to will be sent to lmaster
             self.assertEqual(
                 old_lines_summary[1][hb_start]+1,
@@ -314,9 +290,9 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         conf = self.prepare_config_from_file(conf_file)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
         self._test_lmaster_section_of_config_file(
-            conf_file, host, hb_port#, test_hb=True ## this must be commented out
-        )                                           ## because the hostname in this
-        #                                           ## test is not real
+            conf_file, host, hb_port  # , test_hb=True ## this must be commented out
+        )                                              # # because the hostname in this
+        #                                              # # test is not real
         #  Of course, since "zurraspeador" is not a valid hostname. He chooses
         # to test with a name now:
         conf_file = "lagent-test.8.conf"
@@ -344,15 +320,15 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
     @unittest.skip
     def test_keys_in_lmaster_section_are_read_and_reported_agents_send_to_master(self):
         ####################################################################
-        ###  This test is marked with *skip* because it is 
-        ### wrong **if data from agents is not sent to master**.
-        ###
-        ###  This situation might change in the future if agents will send
-        ### data to master again, which can easily happen. In that event
-        ### the test should be re-introduced, with deemed modifications.
-        ###
-        ###  As of today the agents send the data to Graphite.
-        ###  (DPalao -- 26ago2020)
+        # ##  This test is marked with *skip* because it is
+        # ## wrong **if data from agents is not sent to master**.
+        # ##
+        # ##  This situation might change in the future if agents will send
+        # ## data to master again, which can easily happen. In that event
+        # ## the test should be re-introduced, with deemed modifications.
+        # ##
+        # ##  As of today the agents send the data to Graphite.
+        # ##  (DPalao -- 26ago2020)
         ####################################################################
         #  Now that the basic checks have passed, Tux plans to run the system
         # in a small partition of the cluster.
@@ -401,5 +377,3 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         )
         # He has to admit that the program seems to be passing all the checks and looks
         # it is ready for production!
-
-        
