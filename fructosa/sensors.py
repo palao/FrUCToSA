@@ -82,13 +82,17 @@ def _make_sensor(name, arguments, logging):
 
 class Sensor:
     def __init__(self, logging, time_interval):
-        #self.host = gethostname()
         self.time_interval = time_interval
         self._logger = setup_logging(logger_name=self.name, rotatingfile_conf=logging)
 
     @property
     def host(self):
-        return gethostname()
+        try:
+            host = self._host
+        except AttributeError:
+            host = gethostname()
+            self._host = host
+        return host
         
     @property
     def name(self):

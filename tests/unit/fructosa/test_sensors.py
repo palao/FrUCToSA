@@ -207,17 +207,17 @@ class SensorTestCaseBase(unittest.TestCase):
         self.mocked_time_interval = MagicMock()
         self.some_logging = {OWN_LOG_FILE_KEY: "/dev/null", OWN_LOG_LEVEL_KEY: 17}
         self.mocked_logging = MagicMock()
-        self.host = MagicMock()
+        self.host = "ma.cha.cant.es"
         self.class_name = self.test_class.__name__
         mocked_name = PropertyMock(return_value=self.class_name)
         self.mocked_name = mocked_name
-        with patch("fructosa.sensors.gethostname") as pgethostname:
-            pgethostname.return_value = self.host
-            self.real_log_instance = self.test_class(self.some_logging, self.mocked_time_interval)
-            type(self.real_log_instance).name = mocked_name
-            with patch("fructosa.sensors.setup_logging") as self.psetup_logging:
-                self.instance = self.test_class(self.mocked_logging, self.mocked_time_interval)
-                type(self.instance).name = mocked_name
+        self.real_log_instance = self.test_class(self.some_logging, self.mocked_time_interval)
+        self.real_log_instance._host = self.host
+        type(self.real_log_instance).name = mocked_name
+        with patch("fructosa.sensors.setup_logging") as self.psetup_logging:
+            self.instance = self.test_class(self.mocked_logging, self.mocked_time_interval)
+            type(self.instance).name = mocked_name
+        self.instance._host = self.host
                         
 class SensorTestCase(SensorTestCaseBase):
     def setUp(self):
