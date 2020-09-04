@@ -37,7 +37,7 @@ install_requirements = ["psutil"]
 
 setup(
     name="FrUCToSA",
-    version='0.3.1',
+    version='0.3.2',
     description="A package to collect and analyze basic performance data from clusters",
     long_description=long_description,
     author="David Palao",
