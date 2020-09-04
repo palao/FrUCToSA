@@ -47,7 +47,7 @@ from fructosa.conf import LAGENT_DEFAULT_PIDFILE
 
 
 class BaseLAgent:
-    def prepare_sensors(self, conf):
+    def prepare_sensors(self, conf, hostnames=None):
         """It actually prepares some sensor related messages."""
         sensors = {}
         invalid_sensors = {}
@@ -60,18 +60,25 @@ class BaseLAgent:
             "BootTime", "Users"
         ]
         if self.ft_env.name == DOCKER_FT_ENVIRONMENT:
-            # The next part will only work if the name of the command is not repeated
-            # in the list. In particular it is valid for
-            # * ONE command
-            # * multiple commands with different names
+            # # The next part will only work if the name of the command is not repeated
+            # # in the list. In particular it is valid for
+            # # * ONE command
+            # # * multiple commands with different names
+            # try:
+            #     icmd = self.ft_env.commands.index(self.program.name)
+            #     host = self.ft_env.hostnames[icmd]
+            #     print("[1] host =", host)
+            # except (ValueError, IndexError):
+            #     host = self.program.name
+            #     print("[2] host =", host)
+            #
+            # There is only one program, so only one host is choosen
             try:
-                icmd = self.ft_env.commands.index(self.program.name)
-                host = self.ft_env.hostnames[icmd]
-            except (ValueError, IndexError):
+                host = hostnames[0].split(".")[0]
+            except TypeError:
                 host = self.program.name
         else:
             host = socket.gethostname()
-
         for section in conf.sections():
             if section.startswith("sensor:"):
                 sensor = section[7:]
@@ -114,7 +121,7 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         #  Therefore he prepares a a config file with some valid sensor sections
         # and some invalid ones:
         conf = self.prepare_config_from_file(config_file_name)
-        self.prepare_sensors(conf)
+        self.prepare_sensors(conf, hostnames)
         #  After that he starts checking that ``{program}`` is not running before
         # launching it:
         if self.ft_env.name == LOCALHOST_FT_ENVIRONMENT:
@@ -249,14 +256,14 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
             )
             target_strings.append(trying_to_connect_msg)
         self.setup_logparser(target_strings=tuple(target_strings))
-        # old_lines = self.tmplogparser.get_new_lines()
+        old_lines = self.tmplogparser.get_new_lines()
         old_lines_summary = self.tmplogparser._line_counting_history[-1]
         # and, he launches lagent:
         self.program.args = ("start",)
         programs = (self.program,)
         with self.ft_env(*programs):  # as start_command:
-            self.wait_for_environment(1)
-            # new_lines = self.tmplogparser.get_new_lines()
+            self.wait_for_environment(2)
+            new_lines = self.tmplogparser.get_new_lines()
             new_lines_summary = self.tmplogparser._line_counting_history[-1]
             # He finds in the logs a message claiming that the program is trying to
             # connect with lmaster:
@@ -292,9 +299,9 @@ class BasicLAgentFunctionalityTest(BaseStartStop, BaseLAgent, unittest.TestCase)
         conf = self.prepare_config_from_file(conf_file)
         host = conf[LMASTER_PROGRAM][LMASTER_HOST_KEY]
         self._test_lmaster_section_of_config_file(
-            conf_file, host, hb_port  # , test_hb=True ## this must be commented out
-        )                                              # # because the hostname in this
-        #                                              # # test is not real
+            conf_file, host, hb_port, test_hb=False ## this must be commented out
+        )                                           # # because the hostname in this
+        #                                           # # test is not real
         #  Of course, since "zurraspeador" is not a valid hostname. He chooses
         # to test with a name now:
         conf_file = "lagent-test.8.conf"
