@@ -5,6 +5,13 @@ Changelog
 What *high level* changes are included in each published version.
 
 
+0.3.1
+=====
+
+* Sensors follow a more strict mechanism for metric naming hierarchy:
+  {hostname (without dots)}.{sensor name}
+
+
 0.3.0
 =====
 

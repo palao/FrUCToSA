@@ -13,7 +13,8 @@ Welcome to FrUCToSA's documentation!
    README
    usage/deployment
    usage/dashboards
-
+   usage/sensors
+   
    development/index
    development/requirements
    development/roadmap
