@@ -20,9 +20,13 @@ Future
 0.4.0
 -----
 
-* [R07] Basic agent for jobs (Slurm)
+* [R07] Basic sensors for jobs (Slurm).  Using ``pyslurm`` to collect data 
+  and ``redis`` to store data.
 
-  
+  * collect info about running jobs
+  * sbatch script
+  * stats
+  * ...
 
 0.5.0
 -----
