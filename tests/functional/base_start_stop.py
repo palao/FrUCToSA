@@ -74,6 +74,8 @@ def pairwise(iterable):
 class BaseStartStop:
     _SINGLE_PROGRAM = True
     _WITH_GRAPHITE = False
+    _WITH_SLURM = False
+    _WITH_REDIS = False
     
     def setUp(self):
         if self._SINGLE_PROGRAM:
@@ -101,10 +103,14 @@ class BaseStartStop:
             self.backup_configs[config_file_name] = backup_name
 
     def setUp_ft_env(self):
-        ftenv_type = os.getenv(FRUCTOSA_FT_ENVIRONMENT_VAR, default=DEFAULT_FRUCTOSA_FT_ENVIRONMENT)
+        ftenv_type = os.getenv(
+            FRUCTOSA_FT_ENVIRONMENT_VAR, default=DEFAULT_FRUCTOSA_FT_ENVIRONMENT
+        )
         self.ft_env = FTEnvironment(
             ftenv_type, DEFAULT_OWN_FILE_LOGGING_PATH, DEFAULT_PID_DIR,
-            with_graphite=self._WITH_GRAPHITE
+            with_graphite=self._WITH_GRAPHITE,
+            with_slurm=self._WITH_SLURM,
+            with_redis=self._WITH_REDIS,
         )
         
     def tearDown(self):

@@ -109,7 +109,8 @@ class FTEnvironment:
             self, env_type, original_log_file_name,
             original_pid_dir, pid_dir_mode=0o755,
             root_workdir="/tmp", log_file_name="fructosa.log",
-            with_graphite=False, rotating_logs=0):
+            with_graphite=False, with_slurm=False, with_redis=False,
+            rotating_logs=0):
         """- Parameters:
         rotating_logs: in case of rotating logs, because the rotation mechanism is not 
         (likely to be?) triggered until the log file is closed, and because the log file 
