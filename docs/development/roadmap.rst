@@ -23,9 +23,9 @@ Future
 * [R07] Basic sensors for jobs (Slurm).  Using ``pyslurm`` to collect data 
   and ``redis`` to store data.
 
-  * collect info about running jobs
-  * sbatch script
-  * stats
+  * collect info about running jobs and store it in redis
+  * sbatch script (later?)
+  * stats (later?)
   * ...
 
 0.5.0
