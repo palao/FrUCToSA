@@ -2,6 +2,26 @@
 Functional testing
 ******************
 
+External components
+===================
+
+Some functionality provided by ``FrUCToSA`` makes use of third party
+components, like
+
+* Graphite
+* Grafana
+* Slurm
+* Redis
+
+In order to interact with them during testing, the relevant services are
+run within Docker containers using ``docker-compose``.
+
+Slurm
+-----
+
+The image used is ``giovtorres/slurm-docker-cluster``
+
+
 Work flow
 =========
 

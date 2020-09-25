@@ -138,6 +138,8 @@ class FTEnvironment:
         self.setup_pid_dir(original_pid_dir, pid_dir_mode)
         self._running_commands = set()
         self.with_graphite = with_graphite
+        self.with_slurm = with_slurm
+        self.with_redis = with_redis
         self.docker_user = None
         self.docker_bind_log_volumes = True
         
