@@ -1,5 +1,3 @@
-#!/bin/env python3
-
 #######################################################################
 #
 # Copyright (C) 2020 David Palao
@@ -91,6 +89,17 @@ DOCKER_COMPOSE_GRAPHITE_SERVICE = """
       - 8126:8126
     environment:
       AUTO_REFRESH_INTERVAL: 1
+"""
+
+DOCKER_COMPOSE_REDIS_SERVICE = """
+  redis:
+    container_name: redis4fructosa
+    image: redis
+    ports:
+      - 6379:6379
+"""
+
+DOCKER_COMPOSE_SLURM_SERVICES = """
 """
 
 DOCKER_COMPOSE_SERVICE_USER = "    user: {user}\n"
@@ -317,6 +326,10 @@ class DockerFTEnvironmentType(FTEnvironmentType):
         blocks = [DOCKER_COMPOSE_COMMON]
         if env.with_graphite:
             blocks.append(DOCKER_COMPOSE_GRAPHITE_SERVICE)
+        if env.with_slurm:
+            blocks.append(DOCKER_COMPOSE_SLURM_SERVICES)
+        if env.with_redis:
+            blocks.append(DOCKER_COMPOSE_REDIS_SERVICE)
         for icommand, command in enumerate(commands):
             command._piddir = env.pid_dir
             if command.test_conf and command.standard_conf:

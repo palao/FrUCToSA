@@ -29,7 +29,7 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
     checks that Redis gets messages from FrUCToSA with data from Slurm.
 
     Why MultiProgramBaseStartStop? As of version 0.4.0 this has only to
-    do with lagent. But later it will have to make pera enter into the 
+    do with lagent. But later it will have to make 'pera' enter into the 
     game because data will be sent to it to be processed."""
 
     default_config_files = (LAGENT_DEFAULT_CONFIGFILE,)
@@ -58,9 +58,9 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # once more
         pass
     
-    def test_messages_sent_by_lagent_arrive_to_slurm(self):
+    def test_info_from_jobs_in_slurm_arrive_to_redis(self):
         #  Tux has been told by the developers that FrUCToSA can communicate with
-        # Slurm: it sends metrics to it. He wants to check this feature, that
+        # Slurm:  sends metrics to it. He wants to check this feature, that
         # he finds promising.
         # So he prepares a config file for lagent:
         #lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)
@@ -82,6 +82,8 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # he restarts slurm, to be sure that there is no cache contaminating the test
         # and when he launches the program lagent
         #lmaster.args = ("start",)
+        # aquin: ¿cómo hago para ejecutar lagent en el contenedor?
+        # ¿Empiezo el contenedor 
         lagent.args = ("start",)
         trying_slurm_conn = TO_SLURM_CONNECTING_MSG.format(
             host_key=SLURM_HOST_KEY,
