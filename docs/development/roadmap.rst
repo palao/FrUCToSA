@@ -11,6 +11,12 @@ The difference between :ref:`Past` and the :ref:`CHANGELOG` is the point of view
 :ref:`CHANGELOG` is intended for *end users* whereas :ref:`Past` is mainly for
 developers.
 
+Time estimations
+----------------
+
+* I use the PERT methodology (beta distribution).
+* time units are hours
+  
 
 .. _Future:
 
@@ -27,6 +33,26 @@ Future
   * sbatch script (later?)
   * stats (later?)
   * ...
+
+    
+Time estimation
+^^^^^^^^^^^^^^^
+
++--------------------+-------------+-----------+-------------+--------+-------+
+|  Task              |  Optimistic |  Nominal  |  Pesimistic |   mu   | sigma |
++====================+=============+===========+=============+========+=======+
+| FT                 |      1      |    2      |      6      |   2.5  | 0.83  |
++--------------------+-------------+-----------+-------------+--------+-------+
+| Redis interface    |      2      |    3      |      4      |   3.0  | 0.33  |
++--------------------+-------------+-----------+-------------+--------+-------+
+| Pyslurm interface  |      1      |    2      |      3      |   2.0  | 0.33  |
++--------------------+-------------+-----------+-------------+--------+-------+
+| Sensor destination |      1      |    2      |      4      |   2.17 | 0.50  |
++--------------------+-------------+-----------+-------------+--------+-------+
+
+Total:  9.67 +- 1.08 h
+
+
 
 0.5.0
 -----
