@@ -60,7 +60,7 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
     
     def test_info_from_jobs_in_slurm_arrive_to_redis(self):
         #  Tux has been told by the developers that FrUCToSA can communicate with
-        # Slurm:  sends metrics to it. He wants to check this feature, that
+        # Slurm: it can collect data from slurm. He wants to check this feature, that
         # he finds promising.
         # So he prepares a config file for lagent:
         #lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)

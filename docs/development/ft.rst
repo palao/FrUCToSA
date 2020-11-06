@@ -19,7 +19,23 @@ run within Docker containers using ``docker-compose``.
 Slurm
 -----
 
-The image used is ``giovtorres/slurm-docker-cluster``
+The image used is ``palao/slurm-docker-cluster`` cloned from
+``giovtorres/slurm-docker-cluster`` and modified to suit the requirements
+of the current project (which means to have the devel version of ``FrUCToSA``
+installed, along with a recent version of Python).
+
+The FTs require the image to be built. To build the image::
+
+  $ git clone git@github.com:palao/slurm-docker-cluster.git
+  $ cd slurm-docker-cluster
+  $ docker build -t slurm-for-fructosa -t slurm-for-fructosa:19.05.1 -t slurm-for-fructosa:19.05.1.2 .
+
+
+Afterwards the FTs should run smoothly... hopefully.
+
+If you are curious, have a look at the ``docker-compose.yml`` file in the
+github repo (``palao/slurm-docker-cluster``) to learn how this image is
+used in the FTs (although this is not necessary to run the FTs).
 
 
 Work flow
@@ -34,8 +50,8 @@ There are two environments for FT:
 * `DockerFTEnvironmentType`
 
 
-`DockerFTEnvironmentType`
-^^^^^^^^^^^^^^^^^^^^^^^^^
+``DockerFTEnvironmentType``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 How it is defined and used
 

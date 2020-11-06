@@ -100,7 +100,89 @@ DOCKER_COMPOSE_REDIS_SERVICE = """
 """
 
 DOCKER_COMPOSE_SLURM_SERVICES = """
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    container_name: mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: slurm_acct_db
+      MYSQL_USER: slurm
+      MYSQL_PASSWORD: password
+    volumes:
+      - var_lib_mysql:/var/lib/mysql
+
+  slurmdbd:
+    image: slurm-for-fructosa:19.05.1
+    command: ["slurmdbd"]
+    container_name: slurmdbd
+    hostname: slurmdbd
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - var_log_slurm:/var/log/slurm
+    expose:
+      - "6819"
+    depends_on:
+      - mysql
+
+  slurmctld:
+    image: slurm-for-fructosa:19.05.1
+    command: ["slurmctld"]
+    container_name: slurmctld
+    hostname: slurmctld
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+      - *fructosa-src
+    expose:
+      - "6817"
+    depends_on:
+      - "slurmdbd"
+
+  c1:
+    image: slurm-for-fructosa:19.05.1
+    command: ["slurmd"]
+    hostname: c1
+    container_name: c1
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+    expose:
+      - "6818"
+    depends_on:
+      - "slurmctld"
+
+  c2:
+    image: slurm-for-fructosa:19.5.1
+    command: ["slurmd"]
+    hostname: c2
+    container_name: c2
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+    expose:
+      - "6818"
+    depends_on:
+      - "slurmctld"
+
+volumes:
+  etc_munge:
+  etc_slurm:
+  slurm_jobdir:
+  var_lib_mysql:
+  var_log_slurm:
 """
+
+# ^^^^ where do I put this part?
+
+
 
 DOCKER_COMPOSE_SERVICE_USER = "    user: {user}\n"
 DOCKER_COMPOSE_VOLUME = "- {local_path}:{container_path}"
