@@ -49,10 +49,13 @@ setup(
     provides=["fructosa"],
     install_requires=install_requirements,
     platforms=['GNU/Linux'],
+    extras_require={
+        "Redis": ["redis"],
+    },
     entry_points={'console_scripts': [
         "fructosad = fructosa.fructosad:main",
         "lagent = fructosa.lagent:main",
-        "lmaster = fructosa.lmaster:main",
+        "lmaster = fructosa.lmaster:main [Redis]",
         "make-fructosa-dashboard = fructosa.grafana.dashboard:make_dashboard",
         ],
     },
