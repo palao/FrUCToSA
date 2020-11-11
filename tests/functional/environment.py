@@ -171,7 +171,9 @@ DOCKER_COMPOSE_SLURM_SERVICES = """
       - "6818"
     depends_on:
       - "slurmctld"
+"""
 
+DOCKER_COMPOSE_SLURM_GLOBAL_VOLUMES = """
 volumes:
   etc_munge:
   etc_slurm:
@@ -179,10 +181,6 @@ volumes:
   var_lib_mysql:
   var_log_slurm:
 """
-
-# ^^^^ where do I put this part?
-
-
 
 DOCKER_COMPOSE_SERVICE_USER = "    user: {user}\n"
 DOCKER_COMPOSE_VOLUME = "- {local_path}:{container_path}"
@@ -406,12 +404,15 @@ class DockerFTEnvironmentType(FTEnvironmentType):
         # create docker-compose.yml
         commands = env.commands
         blocks = [DOCKER_COMPOSE_COMMON]
+        global_volumes = []
         if env.with_graphite:
             blocks.append(DOCKER_COMPOSE_GRAPHITE_SERVICE)
         if env.with_slurm:
             blocks.append(DOCKER_COMPOSE_SLURM_SERVICES)
+            global_volumes.append(DOCKER_COMPOSE_SLURM_GLOBAL_VOLUMES)
         if env.with_redis:
             blocks.append(DOCKER_COMPOSE_REDIS_SERVICE)
+        blocks.extend(global_volumes)
         for icommand, command in enumerate(commands):
             command._piddir = env.pid_dir
             if command.test_conf and command.standard_conf:

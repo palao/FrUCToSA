@@ -27,12 +27,10 @@ from tests.functional.base_start_stop import MultiProgramBaseStartStop
 class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
     """First FT for Slurm. It assumes that Slurm and Redis are running and 
     checks that Redis gets messages from FrUCToSA with data from Slurm.
-
-    Why MultiProgramBaseStartStop? As of version 0.4.0 this has only to
-    do with lagent. But later it will have to make 'pera' enter into the 
-    game because data will be sent to it to be processed."""
-
-    default_config_files = (LAGENT_DEFAULT_CONFIGFILE,)
+    """
+    
+    default_config_files = (
+        LMASTER_DEFAULT_CONFIGFILE, LAGENT_DEFAULT_CONFIGFILE)
     _WITH_SLURM = True
     _WITH_REDIS = True
     
@@ -63,16 +61,13 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # Slurm: it can collect data from slurm. He wants to check this feature, that
         # he finds promising.
         # So he prepares a config file for lagent:
-        #lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)
+        lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)
         lagent = LAgentWrapper(pidfile=LAGENT_DEFAULT_PIDFILE)
-        #programs = (lmaster, lagent)
-        programs = (lagent,)
+        programs = (lmaster, lagent)
         if self.ft_env.name == LOCALHOST_FT_ENVIRONMENT:
-            #simple_conf_files = ("lmaster-slurm.1.conf", "lagent-test.1.conf")
-            simple_conf_files = ("lagent-slurm.1.conf",)
+            simple_conf_files = ("lmaster-redis.0.conf", "lagent-slurm.0.conf")
         elif self.ft_env.name == DOCKER_FT_ENVIRONMENT:
-            #simple_conf_files = ("lmaster-slurm.docker.1.conf", "lagent-test.docker.1.conf")
-            simple_conf_files = ("lagent-slurm.docker.1.conf",)
+            simple_conf_files = ("lmaster-redis.docker.0.conf", "lagent-slurm.docker.0.conf")
         confs = [
             self.prepare_config_from_file(
                 conf4test, default_configfile=def_conf, program=prog,
@@ -81,10 +76,9 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         ]
         # he restarts slurm, to be sure that there is no cache contaminating the test
         # and when he launches the program lagent
-        #lmaster.args = ("start",)
-        # aquin: ¿cómo hago para ejecutar lagent en el contenedor?
-        # ¿Empiezo el contenedor 
+        lmaster.args = ("start",)
         lagent.args = ("start",)
+        #aquin:
         trying_slurm_conn = TO_SLURM_CONNECTING_MSG.format(
             host_key=SLURM_HOST_KEY,
             host=confs[0][SLURM_SECTION][SLURM_HOST_KEY],
