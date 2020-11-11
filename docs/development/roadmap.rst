@@ -130,7 +130,7 @@ Total:  7.67 +- 1.00 h
 0.8.0
 -----
 
-* [R14] Improved sensors
+* [R14.1] Improved sensors
 
   * docs: command line mechanism to get info about sensors
   * parameters: implement mechanism to pass params to sensors
@@ -201,6 +201,15 @@ Total:  18.50 +- 2.22 h
 ------
 
 * [R10] ML analysis of collected data to classify jobs (PerA)
+
+
+0.13.0
+------
+
+* [R14.2] Improved sensors (II)
+
+  * modular sensors: sensor availability depends dynamically on reachable
+    modules
 
 
 1.0.0

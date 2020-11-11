@@ -59,3 +59,12 @@ There are two communication mechanisms between ``lagent`` and ``lmaster``:
 As of version 0.3.0 only the basic *heartbeat* mechanism is implemented.
 
 
+Redis
+^^^^^
+
+``lmaster`` will use ``Redis`` to store some data. If a sensor must use
+``Redis``, the data collected should go to ``lmaster``; ``lmaster`` in turn
+will access a local running instance of ``Redis``, that is expected to be
+provided. The reason for this design is consistency with the
+`Redis security model <https://redis.io/topics/security>`_.
+
