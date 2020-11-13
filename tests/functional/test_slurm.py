@@ -63,7 +63,7 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # So he prepares a config file for lagent:
         lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)
         lagent = LAgentWrapper(pidfile=LAGENT_DEFAULT_PIDFILE)
-        programs = (lmaster, lagent)
+        # programs = (lmaster, lagent)
         if self.ft_env.name == LOCALHOST_FT_ENVIRONMENT:
             simple_conf_files = ("lmaster-redis.0.conf", "lagent-slurm.0.conf")
         elif self.ft_env.name == DOCKER_FT_ENVIRONMENT:
@@ -78,28 +78,17 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # and when he launches the program lagent
         lmaster.args = ("start",)
         lagent.args = ("start",)
-        #aquin:
-        trying_slurm_conn = TO_SLURM_CONNECTING_MSG.format(
-            host_key=SLURM_HOST_KEY,
-            host=confs[0][SLURM_SECTION][SLURM_HOST_KEY],
-            port_key=SLURM_CARBON_RECEIVER_PICKLE_PORT_KEY,
-            port=confs[0][SLURM_SECTION][SLURM_CARBON_RECEIVER_PICKLE_PORT_KEY],
-        )
-        slurm_connected = TO_SLURM_CONNECTED_MSG
-        slurm_lines = (trying_slurm_conn, slurm_connected)
-        proto_wrong_value_from_slurm_line = "{} ({})".format(
-            WRONG_MESSAGE_TO_SLURM_MSG, WRONG_MESSAGE_TO_SLURM_DETAIL_MSG
-        )
-        wrong_value_from_slurm_line = proto_wrong_value_from_slurm_line.format(
-            sensor="Users", measurement="_MEASUREMENT_"
-        ).split("_MEASUREMENT_")[0]
-        slurm_error_lines = (wrong_value_from_slurm_line,)
-        self.setup_logparser(target_strings=slurm_lines+slurm_error_lines)
-
-        with self.ft_env(*programs) as slurm_lagent:
+        slurm_ready = SLURM_UP_AND_RUNNING_MSG
+        #slurm_other = SLURM_OTHER_MSG
+        slurm_lines = (slurm_ready,) #  Other?
+        # slurm_error_lines = (wrong_value_from_slurm_line,)
+        self.setup_logparser(target_strings=slurm_lines) # +slurm_error_lines)
+        with self.ft_env():
             # he can see that after waiting some little time the connection with slurm
             # is announced in the logs
             self.wait_for_environment(15)
+            self.ft_env.run_in_container(lmaster, "redis4fructosa")
+            self.ft_env.run_in_container(lagent, "slurmctld")
             new_lines = self.tmplogparser.get_new_lines()
             new_lines_summary = self.tmplogparser._line_counting_history[-1]
             for target in slurm_lines:
@@ -108,6 +97,9 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
                         break
                 else:
                     self.fail("'{}' not found in the logs".format(target))
+            # he submits several jobs
+            # aquin
+            
             # and actually three sensors have reported several measurements:
             #time.sleep(1.1)
             ncpus = os.cpu_count()

@@ -181,3 +181,5 @@ MAKE_DASHBOARD_FILE_ERROR_MSG = (
 # MAKE_DASHBOARD_MALFORMED_FILE_ERROR_MSG = (
 #     "The input file ('{hosts_file}') seems to be malformed"
 # )
+
+SLURM_UP_AND_RUNNING_MSG = "Slurm is up and running"

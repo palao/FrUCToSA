@@ -8,3 +8,5 @@ wheel
 tox
 bump2version
 redis
+cython # for pyslurm
+pyslurm
