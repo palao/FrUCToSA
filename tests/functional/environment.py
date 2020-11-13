@@ -396,9 +396,67 @@ class LocalhostFTEnvironmentType(FTEnvironmentType):
         return "\n".join([_["stderr"].decode() for _ in env._results])
     
 
+def _produce_docker_service_from_command(env, icommand, command):
+    """Auxiliary function to be exclusively used by DockerFTEnvironmentType 
+    to create the necessary docker compose block for a given command."""
+    command._piddir = env.pid_dir
+    if command.test_conf and command.standard_conf:
+        conf_volume = DOCKER_COMPOSE_VOLUME.format(
+            local_path=command.test_conf, container_path=command.standard_conf
+        )
+    else:
+        conf_volume = ""
+    logs_volume = DOCKER_COMPOSE_VOLUME.format(
+        local_path=env.log_file_names[0], container_path=env.original_log_file_names[0]
+    )
+    more_logs = {}
+    my_docker_compose_service = DOCKER_COMPOSE_SERVICE
+    if env.docker_bind_log_volumes:
+        my_docker_compose_service += DOCKER_COMPOSE_VOLUME_LINE.format("")
+        for idx in range(1, env.rotating_logs+1):
+            log_file_name = env.log_file_names[idx]
+            original_log_file_name = env.original_log_file_names[idx]
+            my_docker_compose_service += DOCKER_COMPOSE_VOLUME_LINE.format(idx)
+            more_logs[f"logs_volume{idx}"] = DOCKER_COMPOSE_VOLUME.format(
+                local_path=log_file_name, container_path=original_log_file_name
+            )
+    pid_dir_volume = DOCKER_COMPOSE_VOLUME.format(
+        local_path=env.pid_dir,
+        container_path=env.original_pid_dir,
+    )
+    name = command.name
+    container = name
+    service = name
+    hostname = env.hostnames[icommand]
+    command.container = {"name": container, "service": service, "hostname": hostname}
+    pip_user_flag = ""
+    user_path = ""
+    if env.docker_user:
+        pip_user_flag = PIP_USER_FLAG
+        user_path = USER_PATH
+    compose_service_dict = dict(
+        service_name=service, container_name=container, hostname=hostname,
+        python_version_tag=PYTHON_VERSION_TAG,
+        command=" ".join(command.full_command_line()),
+        logfiles=" ".join(env.original_log_file_names),
+        conf_volume=conf_volume,
+        pid_dir_volume=pid_dir_volume,
+        pip_user_flag=pip_user_flag, user_path=user_path,
+    )
+    if env.docker_bind_log_volumes:
+        compose_service_dict["logs_volume"] = logs_volume
+        compose_service_dict.update(more_logs)
+    service = my_docker_compose_service.format(**compose_service_dict)
+    if env.docker_user:
+        service += DOCKER_COMPOSE_SERVICE_USER.format(user=env.docker_user)
+    env._running_commands.add(command)
+    command.hostname = hostname
+    return service
+
+
 class DockerFTEnvironmentType(FTEnvironmentType):
     name = DOCKER_FT_ENVIRONMENT
-    
+
     @staticmethod
     def __enter__(env):
         # create docker-compose.yml
@@ -412,61 +470,10 @@ class DockerFTEnvironmentType(FTEnvironmentType):
             global_volumes.append(DOCKER_COMPOSE_SLURM_GLOBAL_VOLUMES)
         if env.with_redis:
             blocks.append(DOCKER_COMPOSE_REDIS_SERVICE)
-        blocks.extend(global_volumes)
         for icommand, command in enumerate(commands):
-            command._piddir = env.pid_dir
-            if command.test_conf and command.standard_conf:
-                conf_volume = DOCKER_COMPOSE_VOLUME.format(
-                    local_path=command.test_conf, container_path=command.standard_conf
-                )
-            else:
-                conf_volume = ""
-            logs_volume = DOCKER_COMPOSE_VOLUME.format(
-                local_path=env.log_file_names[0], container_path=env.original_log_file_names[0]
-            )
-            more_logs = {}
-            my_docker_compose_service = DOCKER_COMPOSE_SERVICE
-            if env.docker_bind_log_volumes:
-                my_docker_compose_service += DOCKER_COMPOSE_VOLUME_LINE.format("")
-                for idx in range(1, env.rotating_logs+1):
-                    log_file_name = env.log_file_names[idx]
-                    original_log_file_name = env.original_log_file_names[idx]
-                    my_docker_compose_service += DOCKER_COMPOSE_VOLUME_LINE.format(idx)
-                    more_logs[f"logs_volume{idx}"] = DOCKER_COMPOSE_VOLUME.format(
-                        local_path=log_file_name, container_path=original_log_file_name
-                    )
-            pid_dir_volume = DOCKER_COMPOSE_VOLUME.format(
-                local_path=env.pid_dir,
-                container_path=env.original_pid_dir,
-            )
-            name = command.name
-            container = name
-            service = name
-            hostname = env.hostnames[icommand]
-            command.container = {"name": container, "service": service, "hostname": hostname}
-            pip_user_flag = ""
-            user_path = ""
-            if env.docker_user:
-                pip_user_flag = PIP_USER_FLAG
-                user_path = USER_PATH
-            compose_service_dict = dict(
-                service_name=service, container_name=container, hostname=hostname,
-                python_version_tag=PYTHON_VERSION_TAG,
-                command=" ".join(command.full_command_line()),
-                logfiles=" ".join(env.original_log_file_names),
-                conf_volume=conf_volume,
-                pid_dir_volume=pid_dir_volume,
-                pip_user_flag=pip_user_flag, user_path=user_path,
-            )
-            if env.docker_bind_log_volumes:
-                compose_service_dict["logs_volume"] = logs_volume
-                compose_service_dict.update(more_logs)
-            service = my_docker_compose_service.format(**compose_service_dict)
-            if env.docker_user:
-                service += DOCKER_COMPOSE_SERVICE_USER.format(user=env.docker_user)
+            service = _produce_docker_service_from_command(env, icommand, command)
             blocks.append(service)
-            env._running_commands.add(command)
-            command.hostname = hostname
+        blocks.extend(global_volumes)
         docker_compose_contents = "".join(blocks)
         docker_compose_file = os.path.join(env._workdir.name, "docker-compose.yml")
         with open(docker_compose_file, "w") as f:
