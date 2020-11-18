@@ -22,6 +22,14 @@
 import unittest
 
 from tests.functional.base_start_stop import MultiProgramBaseStartStop
+from tests.common.program import LMasterWrapper, LAgentWrapper, ProgramWrapper
+
+
+DUMMY_SCRIPT_HERE_DOC = """<<EOF
+#!/bin/bash
+sleep 20
+EOF
+"""
 
 
 class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
@@ -33,7 +41,13 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         LMASTER_DEFAULT_CONFIGFILE, LAGENT_DEFAULT_CONFIGFILE)
     _WITH_SLURM = True
     _WITH_REDIS = True
-    
+
+    def submit_dummy_job(self):
+        #aquin
+        sbatch = ProgramWrapper(exe="sbatch")
+        sbatch.args = DUMMY_SCRIPT_HERE_DOC
+        self.ft_env.run_in_container(sbatch, "slurmctld")
+        
     def test_error_behaviour_of_pidfile_functionality(self):
         #  I want to skip this test from the Base because in that test, the
         # functionality of the program is tested, BUT the BasicSlurmTestCase
@@ -78,9 +92,8 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # and when he launches the program lagent
         lmaster.args = ("start",)
         lagent.args = ("start",)
-        slurm_ready = SLURM_UP_AND_RUNNING_MSG
         #slurm_other = SLURM_OTHER_MSG
-        slurm_lines = (slurm_ready,) #  Other?
+        slurm_lines = (SLURM_UP_AND_RUNNING_MSG,) #  More?
         # slurm_error_lines = (wrong_value_from_slurm_line,)
         self.setup_logparser(target_strings=slurm_lines) # +slurm_error_lines)
         with self.ft_env():
@@ -98,27 +111,8 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
                 else:
                     self.fail("'{}' not found in the logs".format(target))
             # he submits several jobs
-            # aquin
-            
-            # and actually three sensors have reported several measurements:
-            #time.sleep(1.1)
-            ncpus = os.cpu_count()
-            hostname = lagent.hostname
-            targets = []
-            for icpu in range(ncpus):
-                targets.append(f"{hostname}.CPUPercent.{icpu}")
-            targets.append(f"{hostname}.VirtualMemory.percent")
-            targets.append(f"{hostname}.BootTime")
-            for target in targets:
-                slurm_data = get_data_from_slurm_render_api(target).strip()
-                print(".>.> '{}' = '{}'".format(target, slurm_data))
-                result = slurm_data.split("|")[1]
-                self.assertNotEqual(result, "None")
-                self.assertNotEqual(result, "")
-            # but the other one is missing, as expected (it is not a time series!):
-            targets = []
-            targets.append(f"{hostname}.Users")
-            for target in targets:
+            for i in range(3):
+                self.submit_dummy_job()
                 slurm_data = get_data_from_slurm_render_api(target).strip()
                 try:
                     result = slurm_data.split("|")[1]
