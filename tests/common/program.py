@@ -64,18 +64,21 @@ class ProgramWrapper:
         self.execution_timeout = execution_timeout
         self.test_conf = None
         self.standard_conf = None
+        self._pidfile = pidfile
         self.pidfile = pidfile
         self.exit_code = None
 
     @property
     def pidfile(self):
-        return os.path.join(self._piddir, self._pid_file_name)
+        if self._pidfile:
+            return os.path.join(self._piddir, self._pid_file_name)
 
     @pidfile.setter
     def pidfile(self, value):
-        head, tail = os.path.split(value)
-        self._piddir = head
-        self._pid_file_name = tail
+        if self._pidfile:
+            head, tail = os.path.split(value)
+            self._piddir = head
+            self._pid_file_name = tail
         
     @property
     def args(self):
@@ -96,12 +99,16 @@ class ProgramWrapper:
             arguments = self.args
         return (self.exe,) + arguments
             
-    def __call__(self, *arguments, timeout=None, pre_exe=()):
+    def __call__(self, *arguments, timeout=None, pre_exe=(), shell=False):
         executable_with_arguments = pre_exe + self.full_command_line(*arguments)
+        if shell:
+            executable_with_arguments = " ".join(executable_with_arguments)
         proc = sp.Popen(
             executable_with_arguments,
             stdout=sp.PIPE,
-            stderr=sp.PIPE)
+            stderr=sp.PIPE,
+            shell=shell
+        )
         if timeout:
             timeout = timeout
         else:
