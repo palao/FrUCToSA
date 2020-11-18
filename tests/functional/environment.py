@@ -26,6 +26,7 @@ import platform
 import shutil
 import socket
 import time
+import subprocess as sp
 
 from tests.common.docker import FTDocker
 from tests.functional.graphite import Graphite
@@ -137,6 +138,7 @@ DOCKER_COMPOSE_SLURM_SERVICES = """
       - slurm_jobdir:/data
       - var_log_slurm:/var/log/slurm
       - *fructosa-src
+      {{logs_volume{}}}
     expose:
       - "6817"
     depends_on:
@@ -324,6 +326,9 @@ class FTEnvironment:
     def run_in_container(self, command, container_name):
         command(pre_exe=("docker", "exec", container_name))
 
+    def cp_to_container(self, source, dest, container):
+        dest = f""#aquin
+        sp.run(["docker", "cp", source])
         
 class FTEnvironmentType:
     @staticmethod
@@ -399,16 +404,12 @@ class LocalhostFTEnvironmentType(FTEnvironmentType):
 def _produce_docker_service_from_command(env, icommand, command):
     """Auxiliary function to be exclusively used by DockerFTEnvironmentType 
     to create the necessary docker compose block for a given command."""
-    command._piddir = env.pid_dir
     if command.test_conf and command.standard_conf:
         conf_volume = DOCKER_COMPOSE_VOLUME.format(
             local_path=command.test_conf, container_path=command.standard_conf
         )
     else:
         conf_volume = ""
-    logs_volume = DOCKER_COMPOSE_VOLUME.format(
-        local_path=env.log_file_names[0], container_path=env.original_log_file_names[0]
-    )
     more_logs = {}
     my_docker_compose_service = DOCKER_COMPOSE_SERVICE
     if env.docker_bind_log_volumes:
@@ -444,6 +445,9 @@ def _produce_docker_service_from_command(env, icommand, command):
         pip_user_flag=pip_user_flag, user_path=user_path,
     )
     if env.docker_bind_log_volumes:
+        logs_volume = DOCKER_COMPOSE_VOLUME.format(
+            local_path=env.log_file_names[0], container_path=env.original_log_file_names[0]
+        )
         compose_service_dict["logs_volume"] = logs_volume
         compose_service_dict.update(more_logs)
     service = my_docker_compose_service.format(**compose_service_dict)
@@ -466,11 +470,24 @@ class DockerFTEnvironmentType(FTEnvironmentType):
         if env.with_graphite:
             blocks.append(DOCKER_COMPOSE_GRAPHITE_SERVICE)
         if env.with_slurm:
-            blocks.append(DOCKER_COMPOSE_SLURM_SERVICES)
+            slurm_services = DOCKER_COMPOSE_SLURM_SERVICES
+            # first time: {{logs_volume{}}} -> {logs_volume}
+            slurm_services = slurm_services.format("")
+            if env.docker_bind_log_volumes:
+                logs_volume = DOCKER_COMPOSE_VOLUME.format(
+                    local_path=env.log_file_names[0],
+                    container_path=env.original_log_file_names[0]
+                )
+                slurm_services = slurm_services.format(logs_volume=logs_volume)
+            else:
+                # second time: {logs_volume} -> ""
+                slurm_services = slurm_services.format(logs_volume="")
+            blocks.append(slurm_services)
             global_volumes.append(DOCKER_COMPOSE_SLURM_GLOBAL_VOLUMES)
         if env.with_redis:
             blocks.append(DOCKER_COMPOSE_REDIS_SERVICE)
         for icommand, command in enumerate(commands):
+            command._piddir = env.pid_dir
             service = _produce_docker_service_from_command(env, icommand, command)
             blocks.append(service)
         blocks.extend(global_volumes)
