@@ -151,14 +151,17 @@ class BaseStartStop:
             msg = msg.format(program=program.default_exe)
             self.fail(msg)
 
-    def _make_test_conf_file_name(self, config_file_name):
-        """This stupid method is a two lines op that was factorized out from its former
-        location (prepare_config_from_file) to make it usable from other places"""
+    def _make_test_conf_file_name(self, config_file_name, relative_dir="data"):
+        """This stupid method is a two lines op that was factorized 
+        out from its former location (prepare_config_from_file) to 
+        make it usable from other places.
+        """
         cwd = os.path.dirname(__file__)
-        return os.path.join(cwd, "data", config_file_name)
+        return os.path.join(cwd, relative_dir, config_file_name)
         
 
-    def prepare_config_from_file(self, config_file_name, default_configfile=None, program=None):
+    def prepare_config_from_file(
+            self, config_file_name, default_configfile=None, program=None):
         """Helper method to be used by subclasses.
         
         It takes a config file from the data dir (config_file_name) and uses it

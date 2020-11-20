@@ -326,10 +326,11 @@ class FTEnvironment:
     def run_in_container(self, command, container_name):
         command(pre_exe=("docker", "exec", container_name))
 
-    def cp_to_container(self, source, dest, container):
-        dest = f""#aquin
-        sp.run(["docker", "cp", source])
-        
+    def cp_to_container(self, source, destination, container):
+        full_destination = f"{container}:{destination}"
+        sp.run(["docker", "cp", source, full_destination])
+
+
 class FTEnvironmentType:
     @staticmethod
     def __enter__(env):

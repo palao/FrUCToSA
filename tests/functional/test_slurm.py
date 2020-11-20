@@ -23,13 +23,15 @@ import unittest
 
 from tests.functional.base_start_stop import MultiProgramBaseStartStop
 from tests.common.program import LMasterWrapper, LAgentWrapper, ProgramWrapper
+from tests.functional.environment import (
+    LOCALHOST_FT_ENVIRONMENT, DOCKER_FT_ENVIRONMENT,
+)
 
-
-DUMMY_SCRIPT_HERE_DOC = """<<EOF
-#!/bin/bash
-sleep 20
-EOF
-"""
+from fructosa.constants import (
+    LMASTER_DEFAULT_CONFIGFILE, LAGENT_DEFAULT_CONFIGFILE,
+    SLURM_UP_AND_RUNNING_MSG, 
+)
+from fructosa.conf import LMASTER_DEFAULT_PIDFILE, LAGENT_DEFAULT_PIDFILE
 
 
 class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
@@ -43,9 +45,15 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
     _WITH_REDIS = True
 
     def submit_dummy_job(self):
-        #aquin
+        job_script = "test_job.sbatch"
+        full_source_sbatch = self._make_test_conf_file_name(
+            job_script, relative_dir="data/slurm"
+        )
+        self.ft_env.cp_to_container(
+            full_source_sbatch, f"/{job_script}", "slurmctld"
+        )
         sbatch = ProgramWrapper(exe="sbatch")
-        sbatch.args = DUMMY_SCRIPT_HERE_DOC
+        sbatch.args = job_script
         self.ft_env.run_in_container(sbatch, "slurmctld")
         
     def test_error_behaviour_of_pidfile_functionality(self):
@@ -77,7 +85,6 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         # So he prepares a config file for lagent:
         lmaster = LMasterWrapper(pidfile=LMASTER_DEFAULT_PIDFILE)
         lagent = LAgentWrapper(pidfile=LAGENT_DEFAULT_PIDFILE)
-        # programs = (lmaster, lagent)
         if self.ft_env.name == LOCALHOST_FT_ENVIRONMENT:
             simple_conf_files = ("lmaster-redis.0.conf", "lagent-slurm.0.conf")
         elif self.ft_env.name == DOCKER_FT_ENVIRONMENT:
@@ -86,14 +93,14 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
             self.prepare_config_from_file(
                 conf4test, default_configfile=def_conf, program=prog,
             ) for conf4test, def_conf, prog in zip(
-                simple_conf_files, self.default_config_files, programs)
+                simple_conf_files, self.default_config_files, (lmaster, lagent))
         ]
         # he restarts slurm, to be sure that there is no cache contaminating the test
         # and when he launches the program lagent
         lmaster.args = ("start",)
         lagent.args = ("start",)
         #slurm_other = SLURM_OTHER_MSG
-        slurm_lines = (SLURM_UP_AND_RUNNING_MSG,) #  More?
+        slurm_lines = (SLURM_UP_AND_RUNNING_MSG, "Submitted batch job") #  More?
         # slurm_error_lines = (wrong_value_from_slurm_line,)
         self.setup_logparser(target_strings=slurm_lines) # +slurm_error_lines)
         with self.ft_env():
@@ -113,19 +120,7 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
             # he submits several jobs
             for i in range(3):
                 self.submit_dummy_job()
-                slurm_data = get_data_from_slurm_render_api(target).strip()
-                try:
-                    result = slurm_data.split("|")[1]
-                except IndexError:
-                    pass
-            # and actually the logs report an error about that sensor:
-            for target in slurm_error_lines:
-                for line in new_lines:
-                    if target in line:
-                        break
-                else:
-                    print("The lines in the log:")
-                    print(new_lines)
-                    print()
-                    self.fail("'{}' not found in the logs".format(target))
-
+            # and he checks that the jobs have been submitted:
+            new_lines = self.tmplogparser.get_new_lines()
+            self.assertEqual(len(new_lines), 4)
+            
