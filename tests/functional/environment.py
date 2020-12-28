@@ -160,7 +160,7 @@ DOCKER_COMPOSE_SLURM_SERVICES = """
       - "slurmctld"
 
   c2:
-    image: slurm-for-fructosa:19.5.1
+    image: slurm-for-fructosa:19.05.1
     command: ["slurmd"]
     hostname: c2
     container_name: c2
