@@ -20,6 +20,7 @@
 #######################################################################
 
 import unittest
+import json
 
 from tests.functional.base_start_stop import MultiProgramBaseStartStop
 from tests.common.program import LMasterWrapper, LAgentWrapper, ProgramWrapper
@@ -32,6 +33,8 @@ from fructosa.constants import (
     SLURM_UP_AND_RUNNING_MSG, 
 )
 from fructosa.conf import LMASTER_DEFAULT_PIDFILE, LAGENT_DEFAULT_PIDFILE
+
+from redis import Redis
 
 
 class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
@@ -100,12 +103,12 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         lmaster.args = ("start",)
         lagent.args = ("start",)
         #slurm_other = SLURM_OTHER_MSG
-        slurm_lines = (SLURM_UP_AND_RUNNING_MSG, "Submitted batch job") #  More?
+        slurm_lines = (SLURM_UP_AND_RUNNING_MSG,) # "Submitted batch job")
         # slurm_error_lines = (wrong_value_from_slurm_line,)
         self.setup_logparser(target_strings=slurm_lines) # +slurm_error_lines)
         with self.ft_env():
-            # he can see that after waiting some little time the connection with slurm
-            # is announced in the logs
+            # he can see that after waiting some little time the connection
+            # with slurm is announced in the logs
             self.wait_for_environment(15)
             self.ft_env.run_in_container(lmaster, "redis4fructosa")
             self.ft_env.run_in_container(lagent, "slurmctld")
@@ -120,7 +123,15 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
             # he submits several jobs
             for i in range(3):
                 self.submit_dummy_job()
-            # and he checks that the jobs have been submitted:
-            new_lines = self.tmplogparser.get_new_lines()
-            self.assertEqual(len(new_lines), 4)
-            
+            # and he checks that the new jobs have been detected by lagent
+            # since they are recorded in Redis:
+            r = Redis(db=13)
+            job_list = r.keys("job:*")
+            self.assertEqual(len(job_list), 3)
+            # the job states agree with what he expects, 2 are running
+            # and a third one is pending:
+            jobs = [json.loads(r.get(j)) for j in job_list]
+            self.assertEqual(
+                sum(1 for j in jobs if j["job_state"] == "RUNNING"), 2)
+            self.assertEqual(
+                sum(1 for j in jobs if j["job_state"] == "PENDING"), 1)
