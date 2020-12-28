@@ -20,31 +20,41 @@
 #######################################################################
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from fructosa.slurm import Slurm
+from fructosa.constants import SLURM_USABLE, SLURM_NOT_USABLE
 
 
+@patch("fructosa.slurm.setup_logging")
 @patch("fructosa.slurm.importlib.import_module")
 class SlurmTestCase(unittest.TestCase):
-    def test_defines__pyslurm_attribute(self, pimport):
+    def test_construction_if_pyslurm_found(self, pimport, psetup):
         s = Slurm()
         slurm_mod = pimport.return_value
         pimport.assert_called_once_with("pyslurm")
         self.assertEqual(slurm_mod, s._pyslurm)
-
-    def test__pyslurm_is_None_if_not_importable(self, pimport):
+        psetup.return_value.info.assert_called_once_with(SLURM_USABLE)
+        
+    def test_constructor_sets_logger(self, pimport, psetup):
+        logger = MagicMock()
+        s = Slurm(logger=logger)
+        psetup.assert_called_once_with(logger_name=logger)
+        
+    def test_construction_if_pyslurm_not_importable(self, pimport, psetup):
         pimport.side_effect = ModuleNotFoundError
         s = Slurm()
         self.assertIs(s._pyslurm, None)
-
-    def test_jobs_method(self, pimport):
+        psetup.return_value.error.assert_called_once_with(SLURM_NOT_USABLE)
+        
+    def test_jobs_method(self, pimport, psetup):
         s = Slurm()
         jobs = s.jobs()
         slurm_mod = pimport.return_value
         self.assertEqual(jobs, slurm_mod.job.return_value.get.return_value)
 
-    def test_jobs_method_returns_empty_dict_if_no_pyslurm(self, pimport):
+    def test_jobs_method_returns_empty_dict_if_no_pyslurm(
+            self, pimport, psetup):
         s = Slurm()
         s._pyslurm = None
         jobs = s.jobs()
