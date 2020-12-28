@@ -32,7 +32,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 
-install_requirements = ["psutil"]
+install_requirements = ["psutil", "wheel", "setuptools>=51.1.0"]
 
 
 setup(

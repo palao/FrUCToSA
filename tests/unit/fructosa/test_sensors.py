@@ -1,5 +1,3 @@
-#!/bin/env python
-
 #######################################################################
 #
 # Copyright (C) 2020 David Palao
@@ -30,6 +28,7 @@ from fructosa.constants import (
 )
 
 from .aio_tools import asyncio_run, AsyncioMock
+
 
 class InventedException(Exception):
     pass
@@ -904,5 +903,18 @@ class UsersTestCase(SensorTestCaseBase):
             patchedmethod.reset_mock()
         
 
-if __name__ == "__main__":
-    unittest.main()
+class SlurmJobsTestCase(SensorTestCaseBase):
+    def setUp(self):
+        from fructosa.sensors import SlurmJobs
+        self.test_class = SlurmJobs
+        super().setUp()
+
+    def test_is_subclass_of_PeriodicSensor(self):
+        from fructosa.sensors import PeriodicSensor
+        self.assertTrue(issubclass(self.test_class, PeriodicSensor))
+
+    @patch("fructosa.sensors.Slurm")
+    def test_measure_calls_Slurm_jobs(self, pSlurm):
+        pSlurm.return_value.jobs.return_value = {"ca": "qui", "te": "na"}
+        self.assertEqual(self.instance.measure(), {"ca": "qui", "te": "na"})
+        pSlurm.return_value.jobs.assert_called_once_with()

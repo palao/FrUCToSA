@@ -1,5 +1,3 @@
-#!/bin/env python
-
 #######################################################################
 #
 # Copyright (C) 2020 David Palao
@@ -29,10 +27,11 @@ from socket import gethostname
 import asyncio
 import time
 
-from fructosa.logs import setup_logging
-from fructosa.constants import PROTO_SENSOR_STARTED_MSG
-
 import psutil
+
+from .logs import setup_logging
+from .constants import PROTO_SENSOR_STARTED_MSG
+from .slurm import Slurm
 
 
 def sensor_factory(name, arguments, logging):
@@ -247,4 +246,6 @@ class Users(PeriodicSensor):
         return [dict(_._asdict()) for _ in psutil.users()]
 
 
-    
+class SlurmJobs(PeriodicSensor):
+    def measure(self):
+        return Slurm().jobs()
