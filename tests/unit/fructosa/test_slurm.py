@@ -33,8 +33,19 @@ class SlurmTestCase(unittest.TestCase):
         pimport.assert_called_once_with("pyslurm")
         self.assertEqual(slurm_mod, s._pyslurm)
 
+    def test__pyslurm_is_None_if_not_importable(self, pimport):
+        pimport.side_effect = ModuleNotFoundError
+        s = Slurm()
+        self.assertIs(s._pyslurm, None)
+
     def test_jobs_method(self, pimport):
         s = Slurm()
         jobs = s.jobs()
         slurm_mod = pimport.return_value
         self.assertEqual(jobs, slurm_mod.job.return_value.get.return_value)
+
+    def test_jobs_method_returns_empty_dict_if_no_pyslurm(self, pimport):
+        s = Slurm()
+        s._pyslurm = None
+        jobs = s.jobs()
+        self.assertEqual(jobs, {})

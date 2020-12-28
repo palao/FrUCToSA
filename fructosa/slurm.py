@@ -23,8 +23,20 @@ import importlib
 
 
 class Slurm:
+    """Wrapper around 'pyslurm'. 'pyslurm' must be imported in the
+    constructor since it is not warrantied to be installable unless
+    'slurm' itself is present.
+    """
     def __init__(self):
-        self._pyslurm = importlib.import_module("pyslurm")
+        try:
+            pyslurm = importlib.import_module("pyslurm")
+        except ModuleNotFoundError:
+            pyslurm = None
+        self._pyslurm = pyslurm
 
     def jobs(self):
-        return self._pyslurm.job().get()
+        try:
+            jobs = self._pyslurm.job().get()
+        except AttributeError:
+            jobs = {}
+        return jobs
