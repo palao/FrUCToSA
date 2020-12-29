@@ -917,4 +917,5 @@ class SlurmJobsTestCase(SensorTestCaseBase):
     def test_measure_calls_Slurm_jobs(self, pSlurm):
         pSlurm.return_value.jobs.return_value = {"ca": "qui", "te": "na"}
         self.assertEqual(self.instance.measure(), {"ca": "qui", "te": "na"})
+        pSlurm.assert_called_once_with(self.instance._logger)
         pSlurm.return_value.jobs.assert_called_once_with()

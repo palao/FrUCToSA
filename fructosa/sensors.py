@@ -248,4 +248,4 @@ class Users(PeriodicSensor):
 
 class SlurmJobs(PeriodicSensor):
     def measure(self):
-        return Slurm().jobs()
+        return Slurm(self._logger).jobs()
