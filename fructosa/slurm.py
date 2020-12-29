@@ -22,7 +22,6 @@
 import importlib
 
 from .constants import SLURM_USABLE, SLURM_NOT_USABLE
-from .logs import setup_logging
 
 
 class Slurm:
@@ -30,8 +29,8 @@ class Slurm:
     constructor since it is not warrantied to be installable unless
     'slurm' itself is present.
     """
-    def __init__(self, logger=None):
-        self._logger = setup_logging(logger_name=logger)
+    def __init__(self, logger):
+        self._logger = logger
         try:
             pyslurm = importlib.import_module("pyslurm")
         except ModuleNotFoundError:

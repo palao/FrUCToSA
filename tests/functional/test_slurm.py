@@ -30,7 +30,7 @@ from tests.functional.environment import (
 
 from fructosa.constants import (
     LMASTER_DEFAULT_CONFIGFILE, LAGENT_DEFAULT_CONFIGFILE,
-    SLURM_UP_AND_RUNNING_MSG, 
+    SLURM_USABLE, 
 )
 from fructosa.conf import LMASTER_DEFAULT_PIDFILE, LAGENT_DEFAULT_PIDFILE
 
@@ -103,7 +103,7 @@ class BasicSlurmTestCase(MultiProgramBaseStartStop, unittest.TestCase):
         lmaster.args = ("start",)
         lagent.args = ("start",)
         #slurm_other = SLURM_OTHER_MSG
-        slurm_lines = (SLURM_UP_AND_RUNNING_MSG,) # "Submitted batch job")
+        slurm_lines = (SLURM_USABLE,) # "Submitted batch job")
         # slurm_error_lines = (wrong_value_from_slurm_line,)
         self.setup_logparser(target_strings=slurm_lines) # +slurm_error_lines)
         with self.ft_env():
